@@ -127,6 +127,43 @@ function StudentWizard({ onCompleted, existingSolicitud = null }) {
     step5: !isObservedMode || revisionConfig.cronograma,
   };
 
+  const isBlank = (value) => String(value || "").trim().length === 0;
+
+  const requiredFieldsByStep = {
+    1: [
+      ["nombre", "nombre completo"],
+      ["cedula", "numero de identificacion"],
+      ["carrera", "carrera"],
+      ["sede", "sede"],
+      ["estudiante_email", "correo electronico"],
+      ["estudiante_phone", "numero telefonico"],
+      ["oficio", "oficio"],
+      ["estado_civil", "estado civil"],
+      ["domicilio", "domicilio"],
+      ["lugar_trabajo", "lugar de trabajo"],
+    ],
+    2: [
+      ["institucion_id", "institucion"],
+      ["institucion", "institucion"],
+      ["institucion_cedula", "cedula juridica"],
+      ["institucion_supervisor", "supervisor"],
+      ["institucion_correo", "correo de contacto"],
+      ["institucion_tipo_servicio", "tipo de servicio"],
+    ],
+    3: [
+      ["tituloProyecto", "titulo del proyecto"],
+      ["justificacion", "descripcion del problema"],
+      ["objetivoGeneral", "objetivo general"],
+      ["beneficiarios", "beneficiarios"],
+      ["estrategiaSolucion", "estrategia de solucion"],
+    ],
+  };
+
+  const getMissingRequiredFields = (step) =>
+    (requiredFieldsByStep[step] || [])
+      .filter(([field]) => isBlank(formData[field]))
+      .map(([, label]) => label);
+
   const isCronogramaValid = () => {
     const rows = Array.isArray(formData.cronogramaItems)
       ? formData.cronogramaItems
@@ -164,6 +201,16 @@ function StudentWizard({ onCompleted, existingSolicitud = null }) {
       .every((item) => String(item || "").trim().length > 0);
   };
 
+  const areAddedObjetivosValid = () => {
+    const items = Array.isArray(formData.objetivosEspecificosItems)
+      ? formData.objetivosEspecificosItems
+      : [];
+
+    return items
+      .slice(3)
+      .every((item) => String(item || "").trim().length > 0);
+  };
+
   const showMessage = (text, type = "success") => {
     if (type === "error") {
       toast.error(text);
@@ -174,6 +221,47 @@ function StudentWizard({ onCompleted, existingSolicitud = null }) {
       return;
     }
     toast.success(text);
+  };
+
+  const validateCurrentStep = () => {
+    if (!editableSections[`step${currentStep}`]) return true;
+
+    const missingFields = getMissingRequiredFields(currentStep);
+    if (missingFields.length) {
+      showMessage(
+        `Completa todos los campos requeridos antes de continuar: ${missingFields.join(", ")}.`,
+        "error",
+      );
+      return false;
+    }
+
+    if (currentStep === 4) {
+      if (!areFirstThreeObjetivosValid()) {
+        showMessage(
+          "Debes completar los primeros 3 objetivos especificos para continuar.",
+          "error",
+        );
+        return false;
+      }
+
+      if (!areAddedObjetivosValid()) {
+        showMessage(
+          "Completa los objetivos especificos adicionales o elimina los que esten vacios.",
+          "error",
+        );
+        return false;
+      }
+    }
+
+    if (currentStep === 5 && !isCronogramaValid()) {
+      showMessage(
+        "Completa correctamente el cronograma. Cada fila debe tener actividad, tarea y horas entre 1 y 8.",
+        "error",
+      );
+      return false;
+    }
+
+    return true;
   };
 
   useEffect(() => {
@@ -408,6 +496,8 @@ function StudentWizard({ onCompleted, existingSolicitud = null }) {
   };
 
   const handleNext = async () => {
+    if (!validateCurrentStep()) return;
+
     if (currentStep === 1 && !isObservedMode) {
       try {
         await api.patch("/user/me", {
@@ -2042,7 +2132,7 @@ function Step4_ObjetivosEspecificos({
 
                   {!isRequired && !obj.trim() && !disabled && (
                     <p className="text-[11px] text-slate-400 mt-1">
-                      Este objetivo adicional es opcional.
+                      Completa este objetivo adicional o quitalo.
                     </p>
                   )}
 
