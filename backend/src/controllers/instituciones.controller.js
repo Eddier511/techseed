@@ -3,21 +3,35 @@ const pool = require("../config/db");
 const ENABLED_STATUS = "Habilitada";
 const DISABLED_STATUS = "Deshabilitada";
 const VALID_INSTITUTION_STATUSES = [ENABLED_STATUS, DISABLED_STATUS];
+let statusColumnReady = false;
 
 function normalizeInstitutionStatus(status) {
   if (status === ENABLED_STATUS || status === "Aprobada") return ENABLED_STATUS;
   return DISABLED_STATUS;
 }
 
+async function ensureInstitutionStatusColumn() {
+  if (statusColumnReady) return;
+
+  await pool.query(
+    `ALTER TABLE instituciones
+     MODIFY estado VARCHAR(20) NOT NULL DEFAULT 'Deshabilitada'`,
+  );
+
+  statusColumnReady = true;
+}
+
 async function normalizeLegacyInstitutionStatuses() {
+  await ensureInstitutionStatusColumn();
+
   await pool.query(
     `UPDATE instituciones
      SET estado = CASE
        WHEN estado = 'Aprobada' THEN ?
-       WHEN estado IN ('Pendiente', 'Rechazada') THEN ?
+       WHEN estado IN ('Pendiente', 'Rechazada', '') OR estado IS NULL THEN ?
        ELSE estado
      END
-     WHERE estado IN ('Aprobada', 'Pendiente', 'Rechazada')`,
+     WHERE estado IN ('Aprobada', 'Pendiente', 'Rechazada', '') OR estado IS NULL`,
     [ENABLED_STATUS, DISABLED_STATUS],
   );
 }
@@ -74,6 +88,8 @@ async function createInstitucionPublic(req, res) {
   }
 
   try {
+    await normalizeLegacyInstitutionStatuses();
+
     const [result] = await pool.query(
       `INSERT INTO instituciones (
         nombre,
@@ -127,6 +143,8 @@ async function createInstitucion(req, res) {
   const normalizedStatus = normalizeInstitutionStatus(estado || ENABLED_STATUS);
 
   try {
+    await normalizeLegacyInstitutionStatuses();
+
     const [result] = await pool.query(
       `INSERT INTO instituciones (
         nombre,
@@ -178,6 +196,8 @@ async function updateInstitucion(req, res) {
   const normalizedStatus = normalizeInstitutionStatus(estado || ENABLED_STATUS);
 
   try {
+    await normalizeLegacyInstitutionStatuses();
+
     await pool.query(
       `UPDATE instituciones
        SET nombre = ?,
@@ -232,6 +252,8 @@ async function updateInstitucionStatus(req, res) {
   }
 
   try {
+    await normalizeLegacyInstitutionStatuses();
+
     await pool.query(
       `UPDATE instituciones
        SET estado = ?
