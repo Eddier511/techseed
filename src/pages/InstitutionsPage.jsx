@@ -1,14 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   LuLayoutDashboard,
-  LuTicket,
   LuFileText,
   LuUserCheck,
   LuBuilding,
   LuLogOut,
   LuEye,
-  LuBadgeCheck,
-  LuBan,
 } from "react-icons/lu";
 import { toast } from "sonner";
 import { useAuth } from "../contexts/AuthContext.jsx";
@@ -17,12 +14,8 @@ import api from "../api/apiClient";
 
 const getStatusClass = (status) => {
   switch (status) {
-    case "Aprobada":
+    case "Habilitada":
       return "bg-emerald-100 text-emerald-700";
-    case "Pendiente":
-      return "bg-yellow-100 text-yellow-700";
-    case "Rechazada":
-      return "bg-red-100 text-red-700";
     case "Deshabilitada":
       return "bg-slate-200 text-slate-700";
     default:
@@ -42,7 +35,7 @@ function mapInstitutionFromApi(apiInst) {
     supervisor_email: apiInst.supervisor_email || "",
     contacto_email: apiInst.contacto_email || "",
     tipo_servicio: apiInst.tipo_servicio || "",
-    estado: apiInst.estado || "Pendiente",
+    estado: apiInst.estado || "Deshabilitada",
     created_at: apiInst.created_at || null,
     updated_at: apiInst.updated_at || null,
     _raw: apiInst,
@@ -91,52 +84,14 @@ export default function InstitutionsPage() {
     setIsModalOpen(false);
   };
 
-  const handleApprove = async (id) => {
-    const t = toast.loading("Aprobando institución...");
-    try {
-      const res = await api.patch(`/instituciones/${id}/status`, {
-        estado: "Aprobada",
-      });
-
-      const updated = mapInstitutionFromApi(res.data);
-      setInstitutions((current) =>
-        current.map((inst) => (inst.id === updated.id ? updated : inst)),
-      );
-
-      toast.success("Institución aprobada correctamente.", { id: t });
-    } catch (err) {
-      console.error("Error aprobando institución:", err);
-      toast.error("No se pudo aprobar la institución.", { id: t });
-    }
-  };
-
-  const handleReject = async (id) => {
-    const t = toast.loading("Rechazando institución...");
-    try {
-      const res = await api.patch(`/instituciones/${id}/status`, {
-        estado: "Rechazada",
-      });
-
-      const updated = mapInstitutionFromApi(res.data);
-      setInstitutions((current) =>
-        current.map((inst) => (inst.id === updated.id ? updated : inst)),
-      );
-
-      toast.success("Institución rechazada.", { id: t });
-    } catch (err) {
-      console.error("Error rechazando institución:", err);
-      toast.error("No se pudo rechazar la institución.", { id: t });
-    }
-  };
-
   const handleToggleEnabled = async (institution) => {
     if (!institution?.id) return;
 
     const nextStatus =
-      institution.estado === "Aprobada" ? "Deshabilitada" : "Aprobada";
+      institution.estado === "Habilitada" ? "Deshabilitada" : "Habilitada";
 
     const t = toast.loading(
-      nextStatus === "Aprobada"
+      nextStatus === "Habilitada"
         ? "Habilitando institución..."
         : "Deshabilitando institución...",
     );
@@ -156,7 +111,7 @@ export default function InstitutionsPage() {
       }
 
       toast.success(
-        nextStatus === "Aprobada"
+        nextStatus === "Habilitada"
           ? "Institución habilitada."
           : "Institución deshabilitada.",
         { id: t },
@@ -176,7 +131,7 @@ export default function InstitutionsPage() {
       supervisor_email: formData.supervisor_email?.trim() || "",
       contacto_email: formData.contacto_email?.trim() || "",
       tipo_servicio: formData.tipo_servicio?.trim() || "",
-      estado: formData.estado || "Pendiente",
+      estado: formData.estado || "Habilitada",
     };
 
     if (
@@ -268,9 +223,7 @@ export default function InstitutionsPage() {
   );
 
   const total = institutions.length;
-  const approved = institutions.filter((i) => i.estado === "Aprobada").length;
-  const pending = institutions.filter((i) => i.estado === "Pendiente").length;
-  const rejected = institutions.filter((i) => i.estado === "Rechazada").length;
+  const enabled = institutions.filter((i) => i.estado === "Habilitada").length;
   const disabled = institutions.filter(
     (i) => i.estado === "Deshabilitada",
   ).length;
@@ -375,15 +328,13 @@ export default function InstitutionsPage() {
           </header>
 
           <main className="flex-1 p-4 md:p-6 overflow-y-auto space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <SummaryCard
                 title="Total instituciones"
                 value={total}
                 color="blue"
               />
-              <SummaryCard title="Aprobadas" value={approved} color="green" />
-              <SummaryCard title="Pendientes" value={pending} color="yellow" />
-              <SummaryCard title="Rechazadas" value={rejected} color="red" />
+              <SummaryCard title="Habilitadas" value={enabled} color="green" />
               <SummaryCard
                 title="Deshabilitadas"
                 value={disabled}
@@ -417,9 +368,7 @@ export default function InstitutionsPage() {
                     className="border border-slate-300 rounded-lg px-2 py-1.5 text-sm w-[180px]"
                   >
                     <option value="all">Todos los estados</option>
-                    <option value="Aprobada">Aprobadas</option>
-                    <option value="Pendiente">Pendientes</option>
-                    <option value="Rechazada">Rechazadas</option>
+                    <option value="Habilitada">Habilitadas</option>
                     <option value="Deshabilitada">Deshabilitadas</option>
                   </select>
 
@@ -509,26 +458,6 @@ export default function InstitutionsPage() {
 
                           <td className="p-3">
                             <div className="flex flex-wrap gap-2">
-                              {inst.estado === "Pendiente" && (
-                                <>
-                                  <button
-                                    onClick={() => handleApprove(inst.id)}
-                                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-100 text-emerald-700 hover:bg-emerald-200 font-semibold text-xs"
-                                  >
-                                    <LuBadgeCheck className="text-sm" />
-                                    Aprobar
-                                  </button>
-
-                                  <button
-                                    onClick={() => handleReject(inst.id)}
-                                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-red-100 text-red-700 hover:bg-red-200 font-semibold text-xs"
-                                  >
-                                    <LuBan className="text-sm" />
-                                    Rechazar
-                                  </button>
-                                </>
-                              )}
-
                               <button
                                 onClick={() => openModal(inst)}
                                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-[rgba(2,14,159,1)] font-semibold text-xs"
@@ -537,21 +466,18 @@ export default function InstitutionsPage() {
                                 Ver / editar
                               </button>
 
-                              {inst.estado !== "Pendiente" &&
-                                inst.estado !== "Rechazada" && (
-                                  <button
-                                    onClick={() => handleToggleEnabled(inst)}
-                                    className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-xl font-semibold text-xs ${
-                                      inst.estado === "Aprobada"
-                                        ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                                        : "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                                    }`}
-                                  >
-                                    {inst.estado === "Aprobada"
-                                      ? "Deshabilitar"
-                                      : "Habilitar"}
-                                  </button>
-                                )}
+                              <button
+                                onClick={() => handleToggleEnabled(inst)}
+                                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-xl font-semibold text-xs ${
+                                  inst.estado === "Habilitada"
+                                    ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                                    : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                                }`}
+                              >
+                                {inst.estado === "Habilitada"
+                                  ? "Deshabilitar"
+                                  : "Habilitar"}
+                              </button>
                             </div>
                           </td>
                         </tr>

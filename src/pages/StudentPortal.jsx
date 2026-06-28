@@ -312,7 +312,7 @@ function StudentWizard({ onCompleted, existingSolicitud = null }) {
       setLoadingInstituciones(true);
       try {
         const res = await api.get("/instituciones", {
-          params: { estado: "Aprobada" },
+          params: { estado: "Habilitada" },
         });
         const list = Array.isArray(res.data) ? res.data : [];
         setInstituciones(list);
@@ -1446,7 +1446,7 @@ function Step2_Institucion({
       const nueva = res.data;
 
       onNotify(
-        "Institución enviada para aprobación. Quedará en estado Pendiente para la coordinación.",
+        "Institucion enviada para revision. Coordinacion podra habilitarla desde el catalogo.",
         "success",
       );
 

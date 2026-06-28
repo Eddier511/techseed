@@ -9,7 +9,7 @@ const initialForm = {
   supervisor_email: "",
   contacto_email: "",
   tipo_servicio: "",
-  estado: "Aprobada",
+  estado: "Habilitada",
 };
 
 export default function InstitutionModal({
@@ -34,7 +34,7 @@ export default function InstitutionModal({
         supervisor_email: institutionData.supervisor_email || "",
         contacto_email: institutionData.contacto_email || "",
         tipo_servicio: institutionData.tipo_servicio || "",
-        estado: institutionData.estado || "Pendiente",
+        estado: institutionData.estado || "Deshabilitada",
       });
     } else {
       setForm(initialForm);
@@ -199,10 +199,8 @@ export default function InstitutionModal({
               onChange={handleChange}
               className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
             >
-              <option value="Aprobada">Aprobada / Habilitada</option>
+              <option value="Habilitada">Habilitada</option>
               <option value="Deshabilitada">Deshabilitada</option>
-              <option value="Pendiente">Pendiente</option>
-              <option value="Rechazada">Rechazada</option>
             </select>
           </div>
 
@@ -210,7 +208,7 @@ export default function InstitutionModal({
             En el portal del estudiante deben mostrarse únicamente las
             instituciones habilitadas. Puedes controlar eso dejando la
             institución en estado
-            <b> Aprobada</b> y ocultarla poniendo <b>Deshabilitada</b>.
+            <b> Habilitada</b> y ocultarla poniendo <b>Deshabilitada</b>.
           </div>
         </form>
 

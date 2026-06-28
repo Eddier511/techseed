@@ -1,20 +1,44 @@
 const pool = require("../config/db");
 
+const ENABLED_STATUS = "Habilitada";
+const DISABLED_STATUS = "Deshabilitada";
+const VALID_INSTITUTION_STATUSES = [ENABLED_STATUS, DISABLED_STATUS];
+
+function normalizeInstitutionStatus(status) {
+  if (status === ENABLED_STATUS || status === "Aprobada") return ENABLED_STATUS;
+  return DISABLED_STATUS;
+}
+
+async function normalizeLegacyInstitutionStatuses() {
+  await pool.query(
+    `UPDATE instituciones
+     SET estado = CASE
+       WHEN estado = 'Aprobada' THEN ?
+       WHEN estado IN ('Pendiente', 'Rechazada') THEN ?
+       ELSE estado
+     END
+     WHERE estado IN ('Aprobada', 'Pendiente', 'Rechazada')`,
+    [ENABLED_STATUS, DISABLED_STATUS],
+  );
+}
+
 /**
  * GET /instituciones
- * - Si viene ?estado=Aprobada -> filtra
+ * - Si viene ?estado=Habilitada -> filtra
  * - Si no -> devuelve todas
  */
 async function getAllInstituciones(req, res) {
   try {
     const { estado } = req.query;
 
+    await normalizeLegacyInstitutionStatuses();
+
     let query = `SELECT * FROM instituciones`;
     let params = [];
 
     if (estado) {
       query += ` WHERE estado = ?`;
-      params.push(estado);
+      params.push(normalizeInstitutionStatus(estado));
     }
 
     query += ` ORDER BY nombre ASC`;
@@ -69,7 +93,7 @@ async function createInstitucionPublic(req, res) {
         supervisor_cargo || null,
         supervisor_email,
         tipo_servicio || null,
-        "Pendiente",
+        DISABLED_STATUS,
         created_by_user_id || null,
       ],
     );
@@ -100,6 +124,8 @@ async function createInstitucion(req, res) {
     estado,
   } = req.body;
 
+  const normalizedStatus = normalizeInstitutionStatus(estado || ENABLED_STATUS);
+
   try {
     const [result] = await pool.query(
       `INSERT INTO instituciones (
@@ -119,7 +145,7 @@ async function createInstitucion(req, res) {
         supervisor_cargo,
         supervisor_email,
         tipo_servicio,
-        estado || "Aprobada",
+        normalizedStatus,
       ],
     );
 
@@ -147,7 +173,9 @@ async function updateInstitucion(req, res) {
     supervisor_cargo,
     supervisor_email,
     tipo_servicio,
+    estado,
   } = req.body;
+  const normalizedStatus = normalizeInstitutionStatus(estado || ENABLED_STATUS);
 
   try {
     await pool.query(
@@ -157,7 +185,8 @@ async function updateInstitucion(req, res) {
            supervisor_nombre = ?,
            supervisor_cargo = ?,
            supervisor_email = ?,
-           tipo_servicio = ?
+           tipo_servicio = ?,
+           estado = ?
        WHERE id = ?`,
       [
         nombre,
@@ -166,6 +195,7 @@ async function updateInstitucion(req, res) {
         supervisor_cargo,
         supervisor_email,
         tipo_servicio,
+        normalizedStatus,
         id,
       ],
     );
@@ -193,12 +223,20 @@ async function updateInstitucionStatus(req, res) {
     return res.status(400).json({ message: "estado es requerido" });
   }
 
+  const normalizedStatus = normalizeInstitutionStatus(estado);
+
+  if (!VALID_INSTITUTION_STATUSES.includes(normalizedStatus)) {
+    return res.status(400).json({
+      message: "estado invalido. Usa Habilitada o Deshabilitada",
+    });
+  }
+
   try {
     await pool.query(
       `UPDATE instituciones
        SET estado = ?
        WHERE id = ?`,
-      [estado, id],
+      [normalizedStatus, id],
     );
 
     const [rows] = await pool.query(
