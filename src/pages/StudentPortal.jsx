@@ -145,10 +145,6 @@ function StudentWizard({ onCompleted, existingSolicitud = null }) {
     2: [
       ["institucion_id", "institucion"],
       ["institucion", "institucion"],
-      ["institucion_cedula", "cedula juridica"],
-      ["institucion_supervisor", "supervisor"],
-      ["institucion_correo", "correo de contacto"],
-      ["institucion_tipo_servicio", "tipo de servicio"],
     ],
     3: [
       ["tituloProyecto", "titulo del proyecto"],
