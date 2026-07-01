@@ -442,6 +442,101 @@ function StudentWizard({ onCompleted, existingSolicitud = null }) {
       y += lines.length * 5 + 3;
     };
 
+    const cronogramaTable = (items) => {
+      const widths = {
+        actividad: contentWidth * 0.36,
+        tarea: contentWidth * 0.48,
+        horas: contentWidth * 0.16,
+      };
+      const rowPadding = 3;
+      const lineHeight = 4.5;
+
+      const drawHeader = () => {
+        ensureSpace(12);
+        doc.setFillColor(15, 23, 42);
+        doc.roundedRect(marginX, y, contentWidth, 9, 2, 2, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8.5);
+        doc.text("Actividad", marginX + rowPadding, y + 6);
+        doc.text("Tarea", marginX + widths.actividad + rowPadding, y + 6);
+        doc.text(
+          "Horas",
+          marginX + widths.actividad + widths.tarea + rowPadding,
+          y + 6,
+        );
+        doc.setTextColor(15, 23, 42);
+        y += 9;
+      };
+
+      drawHeader();
+
+      items.forEach((item, index) => {
+        const actividadLines = doc.splitTextToSize(
+          item.actividad || "No indicada",
+          widths.actividad - rowPadding * 2,
+        );
+        const tareaLines = doc.splitTextToSize(
+          item.tarea || "No indicada",
+          widths.tarea - rowPadding * 2,
+        );
+        const horasLines = doc.splitTextToSize(
+          item.horas || "0",
+          widths.horas - rowPadding * 2,
+        );
+        const rowHeight =
+          Math.max(
+            actividadLines.length,
+            tareaLines.length,
+            horasLines.length,
+          ) *
+            lineHeight +
+          rowPadding * 2;
+
+        if (y + rowHeight > pageHeight - 18) {
+          addFooter();
+          doc.addPage();
+          y = 18;
+          addHeader(false);
+          y = 38;
+          drawHeader();
+        }
+
+        if (index % 2 === 0) {
+          doc.setFillColor(248, 250, 252);
+        } else {
+          doc.setFillColor(255, 255, 255);
+        }
+        doc.rect(marginX, y, contentWidth, rowHeight, "F");
+        doc.setDrawColor(226, 232, 240);
+        doc.rect(marginX, y, contentWidth, rowHeight);
+        doc.line(marginX + widths.actividad, y, marginX + widths.actividad, y + rowHeight);
+        doc.line(
+          marginX + widths.actividad + widths.tarea,
+          y,
+          marginX + widths.actividad + widths.tarea,
+          y + rowHeight,
+        );
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.5);
+        doc.text(actividadLines, marginX + rowPadding, y + rowPadding + 3);
+        doc.text(
+          tareaLines,
+          marginX + widths.actividad + rowPadding,
+          y + rowPadding + 3,
+        );
+        doc.text(
+          horasLines,
+          marginX + widths.actividad + widths.tarea + rowPadding,
+          y + rowPadding + 3,
+        );
+        y += rowHeight;
+      });
+
+      y += 4;
+    };
+
     const objetivosItems = (
       Array.isArray(data.objetivosEspecificosItems)
         ? data.objetivosEspecificosItems
@@ -528,11 +623,7 @@ function StudentWizard({ onCompleted, existingSolicitud = null }) {
 
     sectionTitle("9. Cronograma");
     if (cronogramaItems.length) {
-      cronogramaItems.forEach((item, index) => {
-        bullet(index + 1, `Actividad: ${item.actividad || "No indicada"}`);
-        field("Tarea", item.tarea || "No indicada");
-        field("Horas", item.horas || "0");
-      });
+      cronogramaTable(cronogramaItems);
     } else {
       paragraph("No se agregaron filas de cronograma.");
     }
