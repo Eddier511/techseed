@@ -95,10 +95,15 @@ export default function AdminDashboard() {
 
   const handleApprove = async (observation) => {
     if (!selectedSolicitud || !selectedSolicitud._raw) return;
-    await updateSolicitudStatus(
+    const updated = await updateSolicitudStatus(
       selectedSolicitud._raw.id,
       "Aprobado",
       observation,
+    );
+    toast.success(
+      updated?.codigo_aprobacion
+        ? `TCU aprobado. Código de aprobación: ${updated.codigo_aprobacion}`
+        : "TCU aprobado correctamente.",
     );
     closeModal();
     await fetchAllSolicitudes();

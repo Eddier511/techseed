@@ -33,6 +33,7 @@ function mapSolicitudFromApi(apiS) {
   return {
     id: apiS.id,
     codigo_publico: apiS.codigo_publico,
+    codigo_aprobacion: apiS.codigo_aprobacion || "",
     status: apiS.estado || "Enviado",
     estado: apiS.estado || "Enviado",
 
@@ -200,7 +201,8 @@ export function SolicitudProvider({ children }) {
     try {
       const res = await api.get("/solicitudes/me");
       const listApi = Array.isArray(res.data) ? res.data : [];
-      const last = listApi[0] || null;
+      const approved = listApi.find((s) => s?.estado === "Aprobado") || null;
+      const last = approved || listApi[0] || null;
       const ui = last ? mapSolicitudFromApi(last) : null;
       setMySolicitud(ui);
       return ui;
@@ -385,24 +387,29 @@ export function SolicitudProvider({ children }) {
   const updateSolicitudStatus = useCallback(
     async (idInterno, newStatus, observation = "") => {
       try {
-        await api.patch(`/solicitudes/${idInterno}/status`, {
+        const res = await api.patch(`/solicitudes/${idInterno}/status`, {
           status: newStatus,
           observation,
         });
+        const updated = mapSolicitudFromApi(res.data);
 
         setSolicitudes((current) =>
           (current || []).map((s) =>
             s?.id === idInterno
-              ? { ...s, status: newStatus, estado: newStatus }
+              ? { ...s, ...updated, status: newStatus, estado: newStatus }
               : s,
           ),
         );
 
         if (mySolicitud?.id === idInterno) {
           setMySolicitud((prev) =>
-            prev ? { ...prev, status: newStatus, estado: newStatus } : prev,
+            prev
+              ? { ...prev, ...updated, status: newStatus, estado: newStatus }
+              : prev,
           );
         }
+
+        return updated;
       } catch (err) {
         console.error("Error actualizando estado de solicitud:", err);
         throw err;

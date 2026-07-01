@@ -821,7 +821,9 @@ export default function StudentPortal() {
           <SidebarItem
             icon={LuFilePlus2}
             label={
-              mySolicitud?.estado === "Observado"
+              mySolicitud?.estado === "Aprobado"
+                ? "TCU aprobado"
+                : mySolicitud?.estado === "Observado"
                 ? "Corregir anteproyecto"
                 : "Inscripción de anteproyecto"
             }
@@ -1004,6 +1006,7 @@ function SidebarItem({ icon: Icon, label, active, onClick }) {
 
 function OverviewSection({ mySolicitud, goToInscripcion, goToEstado }) {
   const status = mySolicitud?.estado || "Sin anteproyecto";
+  const isApproved = status === "Aprobado";
 
   let statusClasses = "bg-slate-100 text-slate-600";
   if (status === "Aprobado") statusClasses = "bg-emerald-100 text-emerald-700";
@@ -1034,10 +1037,10 @@ function OverviewSection({ mySolicitud, goToInscripcion, goToEstado }) {
             </p>
           </div>
           <button
-            onClick={goToInscripcion}
+            onClick={isApproved ? goToEstado : goToInscripcion}
             className="mt-3 text-[11px] font-semibold text-[rgba(2,14,159,1)] hover:underline"
           >
-            Ir a inscripción →
+            {isApproved ? "Ver aprobación →" : "Ir a inscripción →"}
           </button>
         </div>
 
@@ -1045,10 +1048,12 @@ function OverviewSection({ mySolicitud, goToInscripcion, goToEstado }) {
           <p className="text-xs text-slate-500 mb-1">Acceso rápido</p>
           <div className="flex flex-wrap gap-2 mt-2">
             <button
-              onClick={goToInscripcion}
+              onClick={isApproved ? goToEstado : goToInscripcion}
               className="px-3 py-1 rounded-full text-[11px] font-semibold bg-slate-900 text-white"
             >
-              {mySolicitud?.estado === "Observado"
+              {isApproved
+                ? "Ver aprobación"
+                : mySolicitud?.estado === "Observado"
                 ? "Corregir anteproyecto"
                 : "Inscribir anteproyecto"}
             </button>
@@ -1079,14 +1084,17 @@ function OverviewSection({ mySolicitud, goToInscripcion, goToEstado }) {
             Próximos pasos
           </h3>
           <p className="text-sm text-slate-600 mb-3">
-            Inicia la inscripción de tu anteproyecto y asegúrate de tener listos
-            tus documentos: constancia de matrícula y copia de cédula.
+            {isApproved
+              ? "Tu TCU ya fue aprobado. Consulta el estado para descargar el comprobante con tu código de aprobación."
+              : "Inicia la inscripción de tu anteproyecto y asegúrate de tener listos tus documentos: constancia de matrícula y copia de cédula."}
           </p>
           <button
-            onClick={goToInscripcion}
+            onClick={isApproved ? goToEstado : goToInscripcion}
             className="px-4 py-2 bg-[rgba(2,14,159,1)] text-white text-xs font-semibold rounded-lg shadow-sm hover:bg-indigo-900"
           >
-            {mySolicitud?.estado === "Observado"
+            {isApproved
+              ? "Ir a estado"
+              : mySolicitud?.estado === "Observado"
               ? "Corregir ahora"
               : "Comenzar inscripción ahora"}
           </button>
@@ -1097,6 +1105,8 @@ function OverviewSection({ mySolicitud, goToInscripcion, goToEstado }) {
 }
 
 function AlreadySubmittedCard({ solicitud, goToEstado }) {
+  const isApproved = solicitud?.estado === "Aprobado";
+
   return (
     <div className="bg-white rounded-2xl shadow-md border border-slate-200 p-8 max-w-3xl">
       <div className="mb-4">
@@ -1104,22 +1114,46 @@ function AlreadySubmittedCard({ solicitud, goToEstado }) {
           Inscripción de anteproyecto
         </p>
         <h2 className="text-2xl font-semibold text-slate-900 mt-1">
-          Ya tienes un anteproyecto registrado
+          {isApproved
+            ? "Ya tienes aprobado el TCU"
+            : "Ya tienes un anteproyecto registrado"}
         </h2>
       </div>
 
-      <div className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-4 mb-6">
-        <p className="text-sm text-blue-900">
-          Tu anteproyecto ya fue enviado y actualmente se encuentra en estado{" "}
-          <span className="font-semibold">
-            {solicitud?.estado || "Enviado"}
-          </span>
-          .
+      <div
+        className={
+          "rounded-2xl px-4 py-4 mb-6 border " +
+          (isApproved
+            ? "border-emerald-200 bg-emerald-50"
+            : "border-blue-200 bg-blue-50")
+        }
+      >
+        <p
+          className={
+            "text-sm " + (isApproved ? "text-emerald-900" : "text-blue-900")
+          }
+        >
+          {isApproved
+            ? "Ya tienes aprobado el TCU. Ve a Estado para descargar tu comprobante y revisar el código de aprobación."
+            : "Tu anteproyecto ya fue enviado y actualmente se encuentra en estado "}
+          {!isApproved && (
+            <>
+              <span className="font-semibold">
+                {solicitud?.estado || "Enviado"}
+              </span>
+              .
+            </>
+          )}
         </p>
-        <p className="text-sm text-blue-800 mt-2">
-          Desde aquí no puedes crear otro anteproyecto mientras este proceso
-          siga activo. Puedes revisar el seguimiento, historial y observaciones
-          en la sección de estado.
+        <p
+          className={
+            "text-sm mt-2 " +
+            (isApproved ? "text-emerald-800" : "text-blue-800")
+          }
+        >
+          {isApproved
+            ? "No puedes registrar otro anteproyecto porque el proceso ya quedó aprobado."
+            : "Desde aquí no puedes crear otro anteproyecto mientras este proceso siga activo. Puedes revisar el seguimiento, historial y observaciones en la sección de estado."}
         </p>
       </div>
 
@@ -1130,6 +1164,14 @@ function AlreadySubmittedCard({ solicitud, goToEstado }) {
             {solicitud?.estado || "Enviado"}
           </p>
         </div>
+        {isApproved && (
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+            <p className="text-xs text-emerald-700">Código de aprobación:</p>
+            <p className="text-sm font-mono tracking-[0.2em] font-semibold text-emerald-900 mt-1">
+              {solicitud?.codigo_aprobacion || "Pendiente"}
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-3">

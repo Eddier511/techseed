@@ -1,8 +1,56 @@
 const pool = require("../config/db");
 
+let approvalCodeColumnReady = false;
+
 function generateCodigo() {
   const num = Math.floor(Math.random() * 90000) + 10000;
   return `#${num}`;
+}
+
+function generateApprovalCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+
+  for (let i = 0; i < 6; i += 1) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+
+  return code;
+}
+
+async function ensureApprovalCodeColumn(db = pool) {
+  if (approvalCodeColumnReady) return;
+
+  const [columns] = await db.query(
+    `SELECT COLUMN_NAME
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME = 'solicitudes'
+       AND COLUMN_NAME = 'codigo_aprobacion'
+     LIMIT 1`,
+  );
+
+  if (!columns.length) {
+    throw new Error(
+      "Falta la columna solicitudes.codigo_aprobacion. Ejecuta la migracion SQL antes de desplegar.",
+    );
+  }
+
+  approvalCodeColumnReady = true;
+}
+
+async function getUniqueApprovalCode(db = pool) {
+  for (let i = 0; i < 20; i += 1) {
+    const code = generateApprovalCode();
+    const [rows] = await db.query(
+      `SELECT id FROM solicitudes WHERE codigo_aprobacion = ? LIMIT 1`,
+      [code],
+    );
+
+    if (!rows.length) return code;
+  }
+
+  throw new Error("No se pudo generar un codigo de aprobacion unico");
 }
 
 function toDateOnly(dateStr) {
@@ -90,6 +138,8 @@ async function getRevisionFlagsBySolicitudId(solicitudId, db = pool) {
  */
 async function getMySolicitudes(req, res) {
   try {
+    await ensureApprovalCodeColumn();
+
     const ownerEmail = String(req.user?.email || "").trim();
 
     if (!ownerEmail) {
@@ -116,6 +166,8 @@ async function getMySolicitudes(req, res) {
  */
 async function getAllSolicitudes(req, res) {
   try {
+    await ensureApprovalCodeColumn();
+
     const [rows] = await pool.query(
       `SELECT *
        FROM solicitudes
@@ -205,6 +257,25 @@ async function createSolicitud(req, res) {
 
   try {
     await conn.beginTransaction();
+    await ensureApprovalCodeColumn(conn);
+
+    const [approvedRows] = await conn.query(
+      `SELECT id, codigo_aprobacion
+       FROM solicitudes
+       WHERE owner_email = ? AND estado = 'Aprobado'
+       ORDER BY updated_at DESC, created_at DESC
+       LIMIT 1`,
+      [ownerEmail],
+    );
+
+    if (approvedRows.length) {
+      await conn.rollback();
+      return res.status(409).json({
+        message:
+          "Ya tienes aprobado el TCU. Ve a Estado para consultar tu comprobante.",
+        codigo_aprobacion: approvedRows[0].codigo_aprobacion || null,
+      });
+    }
 
     const [result] = await conn.query(
       `INSERT INTO solicitudes (
@@ -350,6 +421,8 @@ async function createSolicitud(req, res) {
  */
 async function getSolicitudDetalle(req, res) {
   try {
+    await ensureApprovalCodeColumn();
+
     const { id } = req.params;
 
     const [solRows] = await pool.query(
@@ -405,19 +478,54 @@ async function updateStatus(req, res) {
   const { status, observation } = req.body;
 
   try {
-    await pool.query(
-      `UPDATE solicitudes
-       SET estado = ?, updated_at = CURRENT_TIMESTAMP
-       WHERE id = ?`,
-      [status, id],
-    );
+    await ensureApprovalCodeColumn();
+
+    let approvalCode = null;
+
+    if (status === "Aprobado") {
+      const [existingRows] = await pool.query(
+        `SELECT codigo_aprobacion
+         FROM solicitudes
+         WHERE id = ?
+         LIMIT 1`,
+        [id],
+      );
+
+      approvalCode = existingRows[0]?.codigo_aprobacion || null;
+
+      if (!approvalCode) {
+        approvalCode = await getUniqueApprovalCode();
+      }
+
+      await pool.query(
+        `UPDATE solicitudes
+         SET estado = ?,
+             codigo_aprobacion = ?,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = ?`,
+        [status, approvalCode, id],
+      );
+    } else {
+      await pool.query(
+        `UPDATE solicitudes
+         SET estado = ?, updated_at = CURRENT_TIMESTAMP
+         WHERE id = ?`,
+        [status, id],
+      );
+    }
 
     const actorEmail = req.user?.email || "sistema@ufide.ac.cr";
+    const historyMessage =
+      status === "Aprobado" && approvalCode
+        ? `${observation || ""}${
+            observation ? " " : ""
+          }Codigo de aprobacion: ${approvalCode}`
+        : observation || "";
 
     await pool.query(
       `INSERT INTO solicitud_history (solicitud_id, accion, usuario, mensaje)
        VALUES (?,?,?,?)`,
-      [id, `Estado cambiado a: ${status}`, actorEmail, observation || ""],
+      [id, `Estado cambiado a: ${status}`, actorEmail, historyMessage],
     );
 
     const [rows] = await pool.query("SELECT * FROM solicitudes WHERE id = ?", [
@@ -771,6 +879,8 @@ async function resubmitSolicitud(req, res) {
  */
 async function getSolicitudesReportes(req, res) {
   try {
+    await ensureApprovalCodeColumn();
+
     const { whereClause, params } = buildReportFilters(req.query);
 
     const [rows] = await pool.query(
@@ -778,6 +888,7 @@ async function getSolicitudesReportes(req, res) {
       SELECT
         s.id,
         s.codigo_publico,
+        s.codigo_aprobacion,
         s.estudiante_nombre,
         s.estudiante_cedula,
         s.institucion_id,

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { jsPDF } from "jspdf";
 import {
   LuCheck,
   LuClipboardList,
@@ -48,8 +48,14 @@ export default function StudentStatusPage({ solicitud }) {
   const status = solicitud?.status || solicitud?.estado || "Enviado";
   const activeStep = getActiveStepIndex(status);
 
-  const { nombre, carrera, institucion, tituloProyecto, objetivoGeneral } =
-    solicitud.formData || {};
+  const {
+    nombre,
+    cedula,
+    carrera,
+    institucion,
+    tituloProyecto,
+    objetivoGeneral,
+  } = solicitud.formData || {};
 
   const assignedTo = solicitud.assigned_to;
   const due = solicitud.due;
@@ -75,15 +81,73 @@ export default function StudentStatusPage({ solicitud }) {
       })
     : [];
 
-  const approvalCode = useMemo(() => {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    let code = "";
-    for (let i = 0; i < 6; i++) {
-      const idx = Math.floor(Math.random() * chars.length);
-      code += chars[idx];
-    }
-    return code;
-  }, [solicitud.id, status]);
+  const approvalCode = solicitud?.codigo_aprobacion || "";
+
+  const downloadApprovedDocument = () => {
+    const doc = new jsPDF({ unit: "mm", format: "letter" });
+    const marginX = 18;
+    let y = 20;
+
+    const line = (label, value, gap = 8) => {
+      doc.setFont("helvetica", "bold");
+      doc.text(`${label}:`, marginX, y);
+      doc.setFont("helvetica", "normal");
+      doc.text(String(value || "-"), marginX + 44, y, { maxWidth: 140 });
+      y += gap;
+    };
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("Comprobante de aprobacion TCU", marginX, y);
+    y += 10;
+
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    doc.text(
+      "La coordinacion de TCU aprobo el anteproyecto registrado por el estudiante.",
+      marginX,
+      y,
+      { maxWidth: 175 },
+    );
+    y += 14;
+
+    doc.setDrawColor(16, 185, 129);
+    doc.setFillColor(236, 253, 245);
+    doc.roundedRect(marginX, y, 175, 28, 3, 3, "FD");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text("CODIGO DE APROBACION", marginX + 6, y + 9);
+    doc.setFontSize(22);
+    doc.text(approvalCode || "PENDIENTE", marginX + 6, y + 22);
+    y += 40;
+
+    doc.setFontSize(10);
+    line("Estudiante", nombre);
+    line("Cedula", cedula);
+    line("Carrera", carrera);
+    line("Institucion", institucion);
+    line("Titulo del proyecto", tituloProyecto, 12);
+    line("Objetivo general", objetivoGeneral, 14);
+    line("Estado", "Aprobado");
+    line("Fecha de emision", new Date().toLocaleString("es-CR"));
+
+    y += 8;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.text(
+      "Este codigo es unico y permite validar la aprobacion del TCU ante la coordinacion correspondiente.",
+      marginX,
+      y,
+      { maxWidth: 175 },
+    );
+
+    const safeName = String(nombre || "estudiante")
+      .toLowerCase()
+      .replace(/\s+/g, "_")
+      .replace(/[^\w-]/g, "");
+
+    doc.save(`Comprobante_TCU_Aprobado_${safeName}.pdf`);
+  };
 
   return (
     <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
@@ -265,6 +329,7 @@ export default function StudentStatusPage({ solicitud }) {
             <div className="flex md:flex-col items-end md:items-center gap-3">
               <button
                 type="button"
+                onClick={downloadApprovedDocument}
                 className="px-4 py-2 text-xs md:text-sm font-semibold rounded-xl bg-[rgba(2,14,159,1)] text-white shadow-sm hover:bg-indigo-900"
               >
                 Descargar documento
