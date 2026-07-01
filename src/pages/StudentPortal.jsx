@@ -333,39 +333,113 @@ function StudentWizard({ onCompleted, existingSolicitud = null }) {
   };
 
   const downloadResumenPDF = (data) => {
-    const doc = new jsPDF();
+    const doc = new jsPDF({ unit: "mm", format: "letter" });
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    const marginX = 14;
-    const maxWidth = pageWidth - marginX * 2;
+    const marginX = 18;
+    const contentWidth = pageWidth - marginX * 2;
     let y = 18;
 
-    const ensurePage = (extraSpace = 12) => {
-      if (y + extraSpace > pageHeight - 14) {
-        doc.addPage();
-        y = 20;
-      }
+    const ensureSpace = (height = 14) => {
+      if (y + height <= pageHeight - 18) return;
+      addFooter();
+      doc.addPage();
+      y = 18;
+      addHeader(false);
+      y = 38;
     };
 
-    const line = (text = "", size = 11, bold = false, spacing = 7) => {
-      ensurePage(12);
-      doc.setFont("helvetica", bold ? "bold" : "normal");
-      doc.setFontSize(size);
+    const addHeader = (firstPage = true) => {
+      doc.setFillColor(15, 23, 42);
+      doc.rect(0, 0, pageWidth, firstPage ? 38 : 28, "F");
 
-      const lines = doc.splitTextToSize(String(text), maxWidth);
-      doc.text(lines, marginX, y);
-      y += lines.length * 6 + (spacing - 6);
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(firstPage ? 16 : 12);
+      doc.text(
+        firstPage
+          ? "Anteproyecto TCU para revisión"
+          : "Anteproyecto TCU para revisión",
+        marginX,
+        firstPage ? 15 : 13,
+      );
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text(
+        "Universidad Fidélitas · Coordinación TCU",
+        marginX,
+        firstPage ? 22 : 20,
+      );
+
+      doc.setFillColor(37, 99, 235);
+      doc.roundedRect(pageWidth - 70, firstPage ? 8 : 6, 52, 18, 3, 3, "F");
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      doc.text("ESTADO", pageWidth - 65, firstPage ? 14 : 12);
+      doc.setFontSize(13);
+      doc.text(
+        isObservedMode ? "REENVIADO" : "ENVIADO",
+        pageWidth - 65,
+        firstPage ? 23 : 21,
+      );
+      doc.setTextColor(15, 23, 42);
+    };
+
+    const addFooter = () => {
+      const page = doc.internal.getNumberOfPages();
+      doc.setDrawColor(226, 232, 240);
+      doc.line(marginX, pageHeight - 14, pageWidth - marginX, pageHeight - 14);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(100, 116, 139);
+      doc.text("Anteproyecto TCU para revisión", marginX, pageHeight - 8);
+      doc.text(`Página ${page}`, pageWidth - marginX - 18, pageHeight - 8);
+      doc.setTextColor(15, 23, 42);
     };
 
     const sectionTitle = (title) => {
-      ensurePage(18);
-      y += 3;
-      doc.setFillColor(245, 247, 250);
-      doc.rect(marginX, y - 5, maxWidth, 8, "F");
+      ensureSpace(16);
+      doc.setFillColor(241, 245, 249);
+      doc.roundedRect(marginX, y, contentWidth, 9, 2, 2, "F");
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.text(title, marginX + 2, y);
-      y += 8;
+      doc.setFontSize(10.5);
+      doc.setTextColor(15, 23, 42);
+      doc.text(title, marginX + 3, y + 6);
+      y += 13;
+    };
+
+    const field = (label, value) => {
+      const text = String(value || "No indicado");
+      const labelWidth = 46;
+      const lines = doc.splitTextToSize(text, contentWidth - labelWidth - 4);
+      ensureSpace(Math.max(8, lines.length * 5 + 3));
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.text(`${label}:`, marginX, y);
+      doc.setFont("helvetica", "normal");
+      doc.text(lines, marginX + labelWidth, y);
+      y += Math.max(7, lines.length * 5 + 2);
+    };
+
+    const paragraph = (text) => {
+      const lines = doc.splitTextToSize(String(text || "No indicado"), contentWidth);
+      ensureSpace(lines.length * 5 + 4);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text(lines, marginX, y);
+      y += lines.length * 5 + 4;
+    };
+
+    const bullet = (index, text) => {
+      const lines = doc.splitTextToSize(String(text || "No indicado"), contentWidth - 10);
+      ensureSpace(lines.length * 5 + 3);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.text(`${index}.`, marginX, y);
+      doc.setFont("helvetica", "normal");
+      doc.text(lines, marginX + 8, y);
+      y += lines.length * 5 + 3;
     };
 
     const objetivosItems = (
@@ -386,65 +460,84 @@ function StudentWizard({ onCompleted, existingSolicitud = null }) {
       }))
       .filter((r) => r.actividad || r.tarea || r.horas);
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.text("Anteproyecto TCU", marginX, y);
-    y += 10;
+    addHeader(true);
+    y = 48;
 
+    doc.setFillColor(239, 246, 255);
+    doc.setDrawColor(37, 99, 235);
+    doc.roundedRect(marginX, y, contentWidth, 22, 3, 3, "FD");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(30, 64, 175);
+    doc.text("DOCUMENTO PARA REVISIÓN", marginX + 4, y + 8);
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text(`Fecha de generación: ${new Date().toLocaleString()}`, marginX, y);
-    y += 10;
+    doc.setFontSize(9);
+    doc.text(
+      "Este PDF contiene la versión más reciente del anteproyecto enviada desde el portal estudiantil.",
+      marginX + 4,
+      y + 15,
+      { maxWidth: contentWidth - 8 },
+    );
+    doc.setTextColor(15, 23, 42);
+    y += 32;
 
     sectionTitle("1. Datos del estudiante");
-    line(`Nombre: ${data.nombre || "No indicado"}`);
-    line(`Cédula: ${data.cedula || "No indicada"}`);
-    line(`Carrera: ${data.carrera || "No indicada"}`);
-    line(`Sede: ${data.sede || "No indicada"}`);
-    line(`Correo: ${data.estudiante_email || "No indicado"}`);
-    line(`Teléfono: ${data.estudiante_phone || "No indicado"}`);
-    line(`Oficio: ${data.oficio || "No indicado"}`);
-    line(`Estado civil: ${data.estado_civil || "No indicado"}`);
-    line(`Domicilio: ${data.domicilio || "No indicado"}`);
-    line(`Lugar de trabajo: ${data.lugar_trabajo || "No indicado"}`);
+    field("Nombre", data.nombre);
+    field("Cédula", data.cedula);
+    field("Carrera", data.carrera);
+    field("Sede", data.sede);
+    field("Correo", data.estudiante_email);
+    field("Teléfono", data.estudiante_phone);
+    field("Oficio", data.oficio);
+    field("Estado civil", data.estado_civil);
+    field("Domicilio", data.domicilio);
+    field("Lugar de trabajo", data.lugar_trabajo);
 
     sectionTitle("2. Datos de la institución");
-    line(`Institución: ${data.institucion || "No seleccionada"}`);
-    line(`Cédula jurídica: ${data.institucion_cedula || "No indicada"}`);
-    line(`Supervisor: ${data.institucion_supervisor || "No indicado"}`);
-    line(`Correo de contacto: ${data.institucion_correo || "No indicado"}`);
-    line(
-      `Tipo de servicio: ${data.institucion_tipo_servicio || "No indicado"}`,
-    );
+    field("Institución", data.institucion || "No seleccionada");
+    field("Cédula jurídica", data.institucion_cedula);
+    field("Supervisor", data.institucion_supervisor);
+    field("Correo", data.institucion_correo);
+    field("Tipo de servicio", data.institucion_tipo_servicio);
 
     sectionTitle("3. Datos del proyecto");
-    line(`Título del proyecto: ${data.tituloProyecto || "Sin título"}`);
-    line(
-      `Descripción del problema: ${data.justificacion || "Sin descripción"}`,
-    );
-    line(`Objetivo general: ${data.objetivoGeneral || "Sin objetivo general"}`);
-    line(`Beneficiarios: ${data.beneficiarios || "Sin dato"}`);
-    line(`Estrategia de solución: ${data.estrategiaSolucion || "Sin dato"}`);
+    field("Título", data.tituloProyecto || "Sin título");
+    field("Estado", isObservedMode ? "Reenviado para revisión" : "Enviado para revisión");
+    field("Fecha de generación", new Date().toLocaleString("es-CR"));
 
-    sectionTitle("4. Objetivos específicos");
+    sectionTitle("4. Descripción y justificación");
+    paragraph(data.justificacion || "Sin descripción");
+
+    sectionTitle("5. Objetivo general");
+    paragraph(data.objetivoGeneral || "Sin objetivo general");
+
+    sectionTitle("6. Beneficiarios");
+    paragraph(data.beneficiarios || "Sin dato");
+
+    sectionTitle("7. Estrategia y pertinencia de solución");
+    paragraph(data.estrategiaSolucion || "Sin dato");
+
+    sectionTitle("8. Objetivos específicos");
     if (objetivosItems.length) {
       objetivosItems.forEach((obj, index) => {
-        line(`${index + 1}. ${obj}`);
+        bullet(index + 1, obj);
       });
     } else {
-      line("No se agregaron objetivos específicos.");
+      paragraph("No se agregaron objetivos específicos.");
     }
 
-    sectionTitle("5. Cronograma");
+    sectionTitle("9. Cronograma");
     if (cronogramaItems.length) {
       cronogramaItems.forEach((item, index) => {
-        line(`Actividad ${index + 1}: ${item.actividad || "—"}`, 11, true, 6);
-        line(`Tarea: ${item.tarea || "—"}`, 11, false, 6);
-        line(`Horas: ${item.horas || "0"}`, 11, false, 8);
+        bullet(index + 1, `Actividad: ${item.actividad || "No indicada"}`);
+        field("Tarea", item.tarea || "No indicada");
+        field("Horas", item.horas || "0");
       });
     } else {
-      line("No se agregaron filas de cronograma.");
+      paragraph("No se agregaron filas de cronograma.");
     }
+
+    addFooter();
 
     const safeName = String(data.nombre || "estudiante")
       .toLowerCase()

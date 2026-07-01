@@ -86,60 +86,216 @@ export default function StudentStatusPage({ solicitud }) {
   const downloadApprovedDocument = () => {
     const doc = new jsPDF({ unit: "mm", format: "letter" });
     const marginX = 18;
-    let y = 20;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const contentWidth = pageWidth - marginX * 2;
+    const formData = solicitud?.formData || {};
+    let y = 18;
 
-    const line = (label, value, gap = 8) => {
-      doc.setFont("helvetica", "bold");
-      doc.text(`${label}:`, marginX, y);
-      doc.setFont("helvetica", "normal");
-      doc.text(String(value || "-"), marginX + 44, y, { maxWidth: 140 });
-      y += gap;
+    const today = new Date().toLocaleString("es-CR");
+    const objetivosItems = (
+      Array.isArray(solicitud?.objetivosEspecificosItems)
+        ? solicitud.objetivosEspecificosItems
+        : Array.isArray(formData.objetivosEspecificosItems)
+          ? formData.objetivosEspecificosItems
+          : []
+    )
+      .map((x) => String(x || "").trim())
+      .filter(Boolean);
+
+    const cronogramaItems = (
+      Array.isArray(solicitud?.cronogramaItems)
+        ? solicitud.cronogramaItems
+        : Array.isArray(formData.cronogramaItems)
+          ? formData.cronogramaItems
+          : []
+    )
+      .map((r) => ({
+        actividad: String(r?.actividad || "").trim(),
+        tarea: String(r?.tarea || "").trim(),
+        horas: String(r?.horas ?? "").trim(),
+      }))
+      .filter((r) => r.actividad || r.tarea || r.horas);
+
+    const value = (...items) =>
+      items.find((item) => String(item || "").trim()) || "";
+
+    const ensureSpace = (height = 14) => {
+      if (y + height <= pageHeight - 18) return;
+      addFooter();
+      doc.addPage();
+      y = 18;
+      addHeader(false);
+      y = 38;
     };
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.text("Comprobante de aprobacion TCU", marginX, y);
-    y += 10;
+    const addHeader = (firstPage = true) => {
+      doc.setFillColor(15, 23, 42);
+      doc.rect(0, 0, pageWidth, firstPage ? 38 : 28, "F");
 
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "normal");
-    doc.text(
-      "La coordinacion de TCU aprobo el anteproyecto registrado por el estudiante.",
-      marginX,
-      y,
-      { maxWidth: 175 },
-    );
-    y += 14;
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(firstPage ? 16 : 12);
+      doc.text(
+        firstPage ? "Anteproyecto TCU aprobado" : "Anteproyecto TCU aprobado",
+        marginX,
+        firstPage ? 15 : 13,
+      );
 
-    doc.setDrawColor(16, 185, 129);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text("Universidad Fidélitas · Coordinación TCU", marginX, firstPage ? 22 : 20);
+
+      doc.setFillColor(16, 185, 129);
+      doc.roundedRect(pageWidth - 75, firstPage ? 8 : 6, 57, 18, 3, 3, "F");
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7.5);
+      doc.text("CÓDIGO DE APROBACIÓN", pageWidth - 70, firstPage ? 14 : 12);
+      doc.setFontSize(14);
+      doc.text(approvalCode || "PENDIENTE", pageWidth - 70, firstPage ? 23 : 21);
+      doc.setTextColor(15, 23, 42);
+    };
+
+    const addFooter = () => {
+      const page = doc.internal.getNumberOfPages();
+      doc.setDrawColor(226, 232, 240);
+      doc.line(marginX, pageHeight - 14, pageWidth - marginX, pageHeight - 14);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(100, 116, 139);
+      doc.text(`Código de aprobación: ${approvalCode || "Pendiente"}`, marginX, pageHeight - 8);
+      doc.text(`Página ${page}`, pageWidth - marginX - 18, pageHeight - 8);
+      doc.setTextColor(15, 23, 42);
+    };
+
+    const sectionTitle = (title) => {
+      ensureSpace(16);
+      doc.setFillColor(241, 245, 249);
+      doc.roundedRect(marginX, y, contentWidth, 9, 2, 2, "F");
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10.5);
+      doc.setTextColor(15, 23, 42);
+      doc.text(title, marginX + 3, y + 6);
+      y += 13;
+    };
+
+    const field = (label, fieldValue) => {
+      const text = String(fieldValue || "No indicado");
+      const labelWidth = 46;
+      const lines = doc.splitTextToSize(text, contentWidth - labelWidth - 4);
+      ensureSpace(Math.max(8, lines.length * 5 + 3));
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.text(`${label}:`, marginX, y);
+      doc.setFont("helvetica", "normal");
+      doc.text(lines, marginX + labelWidth, y);
+      y += Math.max(7, lines.length * 5 + 2);
+    };
+
+    const paragraph = (text) => {
+      const lines = doc.splitTextToSize(String(text || "No indicado"), contentWidth);
+      ensureSpace(lines.length * 5 + 4);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text(lines, marginX, y);
+      y += lines.length * 5 + 4;
+    };
+
+    const bullet = (index, text) => {
+      const prefix = `${index}.`;
+      const lines = doc.splitTextToSize(String(text || "No indicado"), contentWidth - 10);
+      ensureSpace(lines.length * 5 + 3);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.text(prefix, marginX, y);
+      doc.setFont("helvetica", "normal");
+      doc.text(lines, marginX + 8, y);
+      y += lines.length * 5 + 3;
+    };
+
+    addHeader(true);
+    y = 48;
+
     doc.setFillColor(236, 253, 245);
-    doc.roundedRect(marginX, y, 175, 28, 3, 3, "FD");
+    doc.setDrawColor(16, 185, 129);
+    doc.roundedRect(marginX, y, contentWidth, 22, 3, 3, "FD");
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.text("CODIGO DE APROBACION", marginX + 6, y + 9);
-    doc.setFontSize(22);
-    doc.text(approvalCode || "PENDIENTE", marginX + 6, y + 22);
-    y += 40;
-
-    doc.setFontSize(10);
-    line("Estudiante", nombre);
-    line("Cedula", cedula);
-    line("Carrera", carrera);
-    line("Institucion", institucion);
-    line("Titulo del proyecto", tituloProyecto, 12);
-    line("Objetivo general", objetivoGeneral, 14);
-    line("Estado", "Aprobado");
-    line("Fecha de emision", new Date().toLocaleString("es-CR"));
-
-    y += 8;
+    doc.setFontSize(11);
+    doc.setTextColor(6, 95, 70);
+    doc.text("TCU APROBADO", marginX + 4, y + 8);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     doc.text(
-      "Este codigo es unico y permite validar la aprobacion del TCU ante la coordinacion correspondiente.",
-      marginX,
-      y,
-      { maxWidth: 175 },
+      "Este documento contiene la versión vigente del anteproyecto aprobado y su código único de validación.",
+      marginX + 4,
+      y + 15,
+      { maxWidth: contentWidth - 8 },
     );
+    doc.setTextColor(15, 23, 42);
+    y += 32;
+
+    sectionTitle("1. Datos del estudiante");
+    field("Nombre", value(nombre, solicitud?.estudiante_nombre));
+    field("Cédula", value(cedula, solicitud?.estudiante_cedula));
+    field("Carrera", value(carrera, solicitud?.carrera));
+    field("Sede", value(formData.sede, solicitud?.sede));
+    field("Correo", value(formData.estudiante_email, solicitud?.estudiante_email));
+    field("Teléfono", value(formData.estudiante_phone, solicitud?.estudiante_phone));
+    field("Oficio", value(formData.oficio, solicitud?.oficio));
+    field("Estado civil", value(formData.estado_civil, solicitud?.estado_civil));
+    field("Domicilio", value(formData.domicilio, solicitud?.domicilio));
+    field("Lugar de trabajo", value(formData.lugar_trabajo, solicitud?.lugar_trabajo));
+
+    sectionTitle("2. Datos de la institución");
+    field("Institución", value(institucion, solicitud?.institucion_nombre));
+    field("Cédula jurídica", formData.institucion_cedula);
+    field("Supervisor", formData.institucion_supervisor);
+    field("Correo", formData.institucion_correo);
+    field("Tipo de servicio", formData.institucion_tipo_servicio);
+
+    sectionTitle("3. Datos del proyecto");
+    field("Título", value(tituloProyecto, solicitud?.tituloProyecto));
+    field("Estado", "Aprobado por la coordinación de TCU");
+    field("Código", approvalCode || "Pendiente");
+    field("Fecha de emisión", today);
+    field("Revisor asignado", assignedTo || "No indicado");
+
+    sectionTitle("4. Descripción y justificación");
+    paragraph(value(formData.justificacion, solicitud?.justificacion));
+
+    sectionTitle("5. Objetivo general");
+    paragraph(value(objetivoGeneral, solicitud?.objetivoGeneral));
+
+    sectionTitle("6. Beneficiarios");
+    paragraph(value(formData.beneficiarios, solicitud?.beneficiario));
+
+    sectionTitle("7. Estrategia y pertinencia de solución");
+    paragraph(value(formData.estrategiaSolucion, solicitud?.estrategiaSolucion));
+
+    sectionTitle("8. Objetivos específicos");
+    if (objetivosItems.length) {
+      objetivosItems.forEach((item, index) => bullet(index + 1, item));
+    } else {
+      paragraph(value(formData.objetivosEspecificos, solicitud?.objetivosEspecificos));
+    }
+
+    sectionTitle("9. Cronograma");
+    if (cronogramaItems.length) {
+      cronogramaItems.forEach((item, index) => {
+        bullet(index + 1, `Actividad: ${item.actividad || "No indicada"}`);
+        field("Tarea", item.tarea || "No indicada");
+        field("Horas", item.horas || "0");
+      });
+    } else {
+      paragraph("No se registró cronograma.");
+    }
+
+    sectionTitle("10. Validación");
+    paragraph(
+      `El código ${approvalCode || "Pendiente"} es único para esta aprobación y debe coincidir con el registro oficial del sistema TechSeed.`,
+    );
+
+    addFooter();
 
     const safeName = String(nombre || "estudiante")
       .toLowerCase()
