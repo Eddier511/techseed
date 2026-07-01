@@ -144,7 +144,11 @@ export default function StudentStatusPage({ solicitud }) {
 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
-      doc.text("Universidad Fidélitas · Coordinación TCU", marginX, firstPage ? 22 : 20);
+      doc.text(
+        "Universidad Fidélitas · Coordinación TCU",
+        marginX,
+        firstPage ? 22 : 20,
+      );
 
       doc.setFillColor(16, 185, 129);
       doc.roundedRect(pageWidth - 75, firstPage ? 8 : 6, 57, 18, 3, 3, "F");
@@ -152,7 +156,11 @@ export default function StudentStatusPage({ solicitud }) {
       doc.setFontSize(7.5);
       doc.text("CÓDIGO DE APROBACIÓN", pageWidth - 70, firstPage ? 14 : 12);
       doc.setFontSize(14);
-      doc.text(approvalCode || "PENDIENTE", pageWidth - 70, firstPage ? 23 : 21);
+      doc.text(
+        approvalCode || "PENDIENTE",
+        pageWidth - 70,
+        firstPage ? 23 : 21,
+      );
       doc.setTextColor(15, 23, 42);
     };
 
@@ -163,7 +171,11 @@ export default function StudentStatusPage({ solicitud }) {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
       doc.setTextColor(100, 116, 139);
-      doc.text(`Código de aprobación: ${approvalCode || "Pendiente"}`, marginX, pageHeight - 8);
+      doc.text(
+        `Código de aprobación: ${approvalCode || "Pendiente"}`,
+        marginX,
+        pageHeight - 8,
+      );
       doc.text(`Página ${page}`, pageWidth - marginX - 18, pageHeight - 8);
       doc.setTextColor(15, 23, 42);
     };
@@ -193,7 +205,10 @@ export default function StudentStatusPage({ solicitud }) {
     };
 
     const paragraph = (text) => {
-      const lines = doc.splitTextToSize(String(text || "No indicado"), contentWidth);
+      const lines = doc.splitTextToSize(
+        String(text || "No indicado"),
+        contentWidth,
+      );
       ensureSpace(lines.length * 5 + 4);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
@@ -203,7 +218,10 @@ export default function StudentStatusPage({ solicitud }) {
 
     const bullet = (index, text) => {
       const prefix = `${index}.`;
-      const lines = doc.splitTextToSize(String(text || "No indicado"), contentWidth - 10);
+      const lines = doc.splitTextToSize(
+        String(text || "No indicado"),
+        contentWidth - 10,
+      );
       ensureSpace(lines.length * 5 + 3);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(9);
@@ -216,35 +234,29 @@ export default function StudentStatusPage({ solicitud }) {
     addHeader(true);
     y = 48;
 
-    doc.setFillColor(236, 253, 245);
-    doc.setDrawColor(16, 185, 129);
-    doc.roundedRect(marginX, y, contentWidth, 22, 3, 3, "FD");
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.setTextColor(6, 95, 70);
-    doc.text("TCU APROBADO", marginX + 4, y + 8);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.text(
-      "Este documento contiene la versión vigente del anteproyecto aprobado y su código único de validación.",
-      marginX + 4,
-      y + 15,
-      { maxWidth: contentWidth - 8 },
-    );
-    doc.setTextColor(15, 23, 42);
-    y += 32;
-
     sectionTitle("1. Datos del estudiante");
     field("Nombre", value(nombre, solicitud?.estudiante_nombre));
     field("Cédula", value(cedula, solicitud?.estudiante_cedula));
     field("Carrera", value(carrera, solicitud?.carrera));
     field("Sede", value(formData.sede, solicitud?.sede));
-    field("Correo", value(formData.estudiante_email, solicitud?.estudiante_email));
-    field("Teléfono", value(formData.estudiante_phone, solicitud?.estudiante_phone));
+    field(
+      "Correo",
+      value(formData.estudiante_email, solicitud?.estudiante_email),
+    );
+    field(
+      "Teléfono",
+      value(formData.estudiante_phone, solicitud?.estudiante_phone),
+    );
     field("Oficio", value(formData.oficio, solicitud?.oficio));
-    field("Estado civil", value(formData.estado_civil, solicitud?.estado_civil));
+    field(
+      "Estado civil",
+      value(formData.estado_civil, solicitud?.estado_civil),
+    );
     field("Domicilio", value(formData.domicilio, solicitud?.domicilio));
-    field("Lugar de trabajo", value(formData.lugar_trabajo, solicitud?.lugar_trabajo));
+    field(
+      "Lugar de trabajo",
+      value(formData.lugar_trabajo, solicitud?.lugar_trabajo),
+    );
 
     sectionTitle("2. Datos de la institución");
     field("Institución", value(institucion, solicitud?.institucion_nombre));
@@ -270,13 +282,17 @@ export default function StudentStatusPage({ solicitud }) {
     paragraph(value(formData.beneficiarios, solicitud?.beneficiario));
 
     sectionTitle("7. Estrategia y pertinencia de solución");
-    paragraph(value(formData.estrategiaSolucion, solicitud?.estrategiaSolucion));
+    paragraph(
+      value(formData.estrategiaSolucion, solicitud?.estrategiaSolucion),
+    );
 
     sectionTitle("8. Objetivos específicos");
     if (objetivosItems.length) {
       objetivosItems.forEach((item, index) => bullet(index + 1, item));
     } else {
-      paragraph(value(formData.objetivosEspecificos, solicitud?.objetivosEspecificos));
+      paragraph(
+        value(formData.objetivosEspecificos, solicitud?.objetivosEspecificos),
+      );
     }
 
     sectionTitle("9. Cronograma");
@@ -289,11 +305,6 @@ export default function StudentStatusPage({ solicitud }) {
     } else {
       paragraph("No se registró cronograma.");
     }
-
-    sectionTitle("10. Validación");
-    paragraph(
-      `El código ${approvalCode || "Pendiente"} es único para esta aprobación y debe coincidir con el registro oficial del sistema TechSeed.`,
-    );
 
     addFooter();
 
