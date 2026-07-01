@@ -471,10 +471,6 @@ export default function StudentStatusPage({ solicitud }) {
                   <span className="font-semibold">Título del proyecto:</span>{" "}
                   {tituloProyecto || "Sin título registrado"}
                 </p>
-                <p>
-                  <span className="font-semibold">Objetivo general:</span>{" "}
-                  {objetivoGeneral || "Sin objetivo registrado"}
-                </p>
                 <p className="mt-1">
                   <span className="font-semibold text-emerald-700">
                     Estado:
