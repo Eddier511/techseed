@@ -468,6 +468,15 @@ export default function SolicitudModal({
 
               <div>
                 <p className="font-semibold mb-1 text-xs md:text-sm">
+                  Objetivo general
+                </p>
+                <Box>
+                  {objetivoGeneral || "Sin objetivo general registrado."}
+                </Box>
+              </div>
+
+              <div>
+                <p className="font-semibold mb-1 text-xs md:text-sm">
                   ¿A quién se beneficiará el proyecto?
                 </p>
                 <Box>{beneficiarios || "Sin beneficiarios registrados."}</Box>
@@ -507,15 +516,6 @@ export default function SolicitudModal({
                     Habilitar corrección
                   </label>
                 )}
-              </div>
-
-              <div>
-                <p className="font-semibold mb-1 text-xs md:text-sm">
-                  Objetivo general
-                </p>
-                <Box>
-                  {objetivoGeneral || "Sin objetivo general registrado."}
-                </Box>
               </div>
 
               <div>
