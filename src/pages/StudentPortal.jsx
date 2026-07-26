@@ -1963,12 +1963,21 @@ function normalizeAiResult(result) {
   };
 }
 
+function hasAiReviewText(text) {
+  return String(text || "").trim().length > 0;
+}
+
 function Step3_ProyectoU({ formData, handleChange, disabled = false }) {
   const [aiLoadingField, setAiLoadingField] = useState(null);
   const [aiResultByField, setAiResultByField] = useState({});
 
   const askAI = async (field, text) => {
     if (disabled) return;
+
+    if (!hasAiReviewText(text)) {
+      toast.warning("Escribí algo en el campo antes de analizarlo con IA.");
+      return;
+    }
 
     try {
       setAiLoadingField(field);
@@ -2205,6 +2214,11 @@ function Step4_ObjetivosEspecificos({
 
   const askAIObjective = async (idx, text) => {
     if (disabled) return;
+
+    if (!hasAiReviewText(text)) {
+      toast.warning("Escribí el objetivo antes de analizarlo con IA.");
+      return;
+    }
 
     try {
       setAiLoadingIndex(idx);
