@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { jsPDF } from "jspdf";
 import {
   LuCheck,
@@ -7,6 +8,7 @@ import {
   LuBadgeCheck,
   LuInfo,
 } from "react-icons/lu";
+import api from "../api/apiClient";
 
 const timelineSteps = [
   {
@@ -45,6 +47,8 @@ const getActiveStepIndex = (status) => {
 };
 
 export default function StudentStatusPage({ solicitud }) {
+  const [institutionDetail, setInstitutionDetail] = useState(null);
+
   const status = solicitud?.status || solicitud?.estado || "Enviado";
   const activeStep = getActiveStepIndex(status);
 
@@ -83,13 +87,49 @@ export default function StudentStatusPage({ solicitud }) {
 
   const approvalCode = solicitud?.codigo_aprobacion || "";
 
-  const downloadApprovedDocument = () => {
+  useEffect(() => {
+    let ignore = false;
+
+    const loadInstitutionDetail = async () => {
+      const institutionId =
+        solicitud?.institucion_id || solicitud?.formData?.institucion_id;
+
+      if (!institutionId) {
+        setInstitutionDetail(null);
+        return;
+      }
+
+      try {
+        const res = await api.get("/instituciones");
+        const list = Array.isArray(res.data) ? res.data : [];
+        const found = list.find(
+          (inst) => String(inst.id) === String(institutionId),
+        );
+
+        if (!ignore) setInstitutionDetail(found || null);
+      } catch (err) {
+        console.warn("No se pudo cargar el detalle de la institución:", err);
+        if (!ignore) setInstitutionDetail(null);
+      }
+    };
+
+    loadInstitutionDetail();
+
+    return () => {
+      ignore = true;
+    };
+  }, [solicitud?.institucion_id, solicitud?.formData?.institucion_id]);
+
+  const downloadApprovedDocument = async () => {
     const doc = new jsPDF({ unit: "mm", format: "letter" });
     const marginX = 18;
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const contentWidth = pageWidth - marginX * 2;
     const formData = solicitud?.formData || {};
+    const institutionId =
+      solicitud?.institucion_id || solicitud?.formData?.institucion_id;
+    let currentInstitutionDetail = institutionDetail;
     let y = 18;
 
     const today = new Date().toLocaleString("es-CR");
@@ -119,6 +159,46 @@ export default function StudentStatusPage({ solicitud }) {
 
     const value = (...items) =>
       items.find((item) => String(item || "").trim()) || "";
+
+    if (!currentInstitutionDetail && institutionId) {
+      try {
+        const res = await api.get("/instituciones");
+        const list = Array.isArray(res.data) ? res.data : [];
+        currentInstitutionDetail =
+          list.find((inst) => String(inst.id) === String(institutionId)) ||
+          null;
+        setInstitutionDetail(currentInstitutionDetail);
+      } catch (err) {
+        console.warn("No se pudo cargar la institución para el PDF:", err);
+      }
+    }
+
+    const institutionName = value(
+      institucion,
+      solicitud?.institucion_nombre,
+      currentInstitutionDetail?.nombre,
+    );
+    const institutionCedula = value(
+      currentInstitutionDetail?.cedula_juridica,
+      formData.institucion_cedula,
+    );
+    const institutionSupervisor = value(
+      currentInstitutionDetail?.supervisor_nombre,
+      formData.institucion_supervisor,
+    );
+    const institutionSupervisorCargo = value(
+      currentInstitutionDetail?.supervisor_cargo,
+      formData.institucion_supervisor_cargo,
+    );
+    const institutionEmail = value(
+      currentInstitutionDetail?.contacto_email,
+      currentInstitutionDetail?.supervisor_email,
+      formData.institucion_correo,
+    );
+    const institutionServiceType = value(
+      currentInstitutionDetail?.tipo_servicio,
+      formData.institucion_tipo_servicio,
+    );
 
     const ensureSpace = (height = 14) => {
       if (y + height <= pageHeight - 18) return;
@@ -350,11 +430,12 @@ export default function StudentStatusPage({ solicitud }) {
     );
 
     sectionTitle("2. Datos de la institución");
-    field("Institución", value(institucion, solicitud?.institucion_nombre));
-    field("Cédula jurídica", formData.institucion_cedula);
-    field("Supervisor", formData.institucion_supervisor);
-    field("Correo", formData.institucion_correo);
-    field("Tipo de servicio", formData.institucion_tipo_servicio);
+    field("Institución", institutionName);
+    field("Cédula jurídica", institutionCedula);
+    field("Supervisor", institutionSupervisor);
+    field("Cargo supervisor", institutionSupervisorCargo);
+    field("Correo", institutionEmail);
+    field("Tipo de servicio", institutionServiceType);
 
     sectionTitle("3. Datos del proyecto");
     field("Título", value(tituloProyecto, solicitud?.tituloProyecto));
