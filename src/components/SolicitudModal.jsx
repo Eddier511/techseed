@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { LuX } from "react-icons/lu";
+import { toast } from "sonner";
 import api from "../api/apiClient";
 import { useSolicitudes } from "../contexts/SolicitudContext";
 
@@ -221,7 +222,7 @@ export default function SolicitudModal({
     if (!canManage) return;
 
     if (!observation.trim()) {
-      alert("Por favor, escriba una observación para devolver la solicitud.");
+      toast.warning("Necesitas escribir una observación antes de devolver.");
       return;
     }
 
@@ -231,8 +232,8 @@ export default function SolicitudModal({
       !editableFlags.objetivos &&
       !editableFlags.cronograma
     ) {
-      alert(
-        "Debes marcar al menos una sección para habilitar edición al estudiante.",
+      toast.warning(
+        "Marca al menos una sección para habilitar la corrección del estudiante.",
       );
       return;
     }
@@ -256,7 +257,7 @@ export default function SolicitudModal({
   const handleRejectClick = () => {
     if (!canManage) return;
     if (!observation.trim()) {
-      alert("Por favor, justifique el rechazo en las observaciones.");
+      toast.warning("Necesitas justificar antes de rechazar.");
       return;
     }
     onReject(observation.trim());

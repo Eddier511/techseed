@@ -95,42 +95,59 @@ export default function AdminDashboard() {
 
   const handleApprove = async (observation) => {
     if (!selectedSolicitud || !selectedSolicitud._raw) return;
-    const updated = await updateSolicitudStatus(
-      selectedSolicitud._raw.id,
-      "Aprobado",
-      observation,
-    );
-    toast.success(
-      updated?.codigo_aprobacion
-        ? `TCU aprobado. Código de aprobación: ${updated.codigo_aprobacion}`
-        : "TCU aprobado correctamente.",
-    );
-    closeModal();
-    await fetchAllSolicitudes();
+    const tId = toast.loading("Aprobando solicitud...");
+
+    try {
+      const updated = await updateSolicitudStatus(
+        selectedSolicitud._raw.id,
+        "Aprobado",
+        observation,
+      );
+      toast.success(
+        updated?.codigo_aprobacion
+          ? `TCU aprobado. Código de aprobación: ${updated.codigo_aprobacion}`
+          : "TCU aprobado correctamente.",
+        { id: tId },
+      );
+      closeModal();
+      await fetchAllSolicitudes();
+    } catch (err) {
+      console.error("Error aprobando solicitud:", err);
+      toast.error("No se pudo aprobar la solicitud.", { id: tId });
+    }
   };
 
   const handleReject = async (observation) => {
     if (!selectedSolicitud || !selectedSolicitud._raw) return;
-    await updateSolicitudStatus(
-      selectedSolicitud._raw.id,
-      "Rechazado",
-      observation,
-    );
-    closeModal();
-    await fetchAllSolicitudes();
+    const tId = toast.loading("Rechazando solicitud...");
+
+    try {
+      await updateSolicitudStatus(
+        selectedSolicitud._raw.id,
+        "Rechazado",
+        observation,
+      );
+      toast.success("Solicitud rechazada correctamente.", { id: tId });
+      closeModal();
+      await fetchAllSolicitudes();
+    } catch (err) {
+      console.error("Error rechazando solicitud:", err);
+      toast.error("No se pudo rechazar la solicitud.", { id: tId });
+    }
   };
 
   const handleReturn = async (payload) => {
     if (!selectedSolicitud || !selectedSolicitud._raw) return;
+    const tId = toast.loading("Devolviendo solicitud...");
 
     try {
       await returnSolicitudWithFlags(selectedSolicitud._raw.id, payload);
       closeModal();
       await fetchAllSolicitudes();
-      toast.success("Solicitud devuelta con observaciones.");
+      toast.success("Solicitud devuelta con observaciones.", { id: tId });
     } catch (err) {
       console.error("Error devolviendo solicitud:", err);
-      toast.error("No se pudo devolver la solicitud.");
+      toast.error("No se pudo devolver la solicitud.", { id: tId });
     }
   };
 
