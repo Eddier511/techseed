@@ -93,10 +93,6 @@ export default function SolicitudModal({
             objetivos: !!rf.objetivos_editable,
             cronograma: !!rf.cronograma_editable,
           });
-
-          if (rf.comentario_revisor) {
-            setObservation(rf.comentario_revisor);
-          }
         }
       } catch (e) {
         console.error("Error cargando detalle:", e);

@@ -200,6 +200,19 @@ export default function AdminDashboard() {
     }
   };
 
+  const getPriorityLabel = (prio) => {
+    switch (prio) {
+      case "High":
+        return "Alta";
+      case "Medium":
+        return "Media";
+      case "Low":
+        return "Baja";
+      default:
+        return prio || "-";
+    }
+  };
+
   const getAssignedClass = (assigned_to) => {
     if (!assigned_to) return "bg-slate-100 text-slate-700";
     return "bg-purple-100 text-purple-700";
@@ -238,17 +251,33 @@ export default function AdminDashboard() {
   };
 
   const filteredSolicitudes = solicitudes.filter((s) => {
-    const searchText = search.toLowerCase();
+    const searchText = search.toLowerCase().trim();
 
     const idStr = String(s.id || "");
     const reqStr = String(s.req || "");
     const subjStr = String(s.subj || "");
+    const publicCodeStr = String(
+      s.codigo_publico || s._raw?.codigo_publico || "",
+    );
+    const approvalCodeStr = String(
+      s.codigo_aprobacion || s._raw?.codigo_aprobacion || "",
+    );
+    const studentNameStr = String(
+      s.formData?.nombre || s.estudiante_nombre || "",
+    );
+    const studentEmailStr = String(
+      s.formData?.estudiante_email || s.estudiante_email || "",
+    );
 
     const matchesSearch =
       !searchText ||
       idStr.toLowerCase().includes(searchText) ||
       reqStr.toLowerCase().includes(searchText) ||
-      subjStr.toLowerCase().includes(searchText);
+      subjStr.toLowerCase().includes(searchText) ||
+      publicCodeStr.toLowerCase().includes(searchText) ||
+      approvalCodeStr.toLowerCase().includes(searchText) ||
+      studentNameStr.toLowerCase().includes(searchText) ||
+      studentEmailStr.toLowerCase().includes(searchText);
 
     const matchesPriority =
       priorityFilter === "all" || s.prio === priorityFilter;
@@ -395,14 +424,14 @@ export default function AdminDashboard() {
                     Solicitudes recibidas
                   </h2>
                   <p className="text-[11px] text-slate-500">
-                    Filtra por estudiante, estado, prioridad o rango de fechas.
+                    Filtra por estudiante, código, estado, prioridad o rango de fechas.
                   </p>
                 </div>
 
                 <div className="flex flex-wrap gap-3">
                   <input
                     type="text"
-                    placeholder="Buscar por ID, estudiante o asunto..."
+                    placeholder="Buscar por ID, estudiante, asunto o código..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="border border-slate-300 rounded-lg px-3 py-1.5 text-sm w-full md:w-80"
@@ -521,7 +550,7 @@ export default function AdminDashboard() {
                               <span
                                 className={`px-3 py-1 rounded-full font-medium text-[11px] ${getPriorityClass(ticket.prio)}`}
                               >
-                                {ticket.prio}
+                                {getPriorityLabel(ticket.prio)}
                               </span>
                             </td>
                             <td className="p-3">

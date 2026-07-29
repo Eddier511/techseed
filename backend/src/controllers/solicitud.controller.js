@@ -277,6 +277,24 @@ async function createSolicitud(req, res) {
       });
     }
 
+    const [latestRows] = await conn.query(
+      `SELECT id, estado
+       FROM solicitudes
+       WHERE owner_email = ?
+       ORDER BY updated_at DESC, created_at DESC
+       LIMIT 1`,
+      [ownerEmail],
+    );
+
+    if (latestRows.length && latestRows[0].estado !== "Rechazado") {
+      await conn.rollback();
+      return res.status(409).json({
+        message:
+          "Ya tienes un anteproyecto en proceso. Puedes registrar uno nuevo solo si el anterior fue rechazado.",
+        estado: latestRows[0].estado,
+      });
+    }
+
     const [result] = await conn.query(
       `INSERT INTO solicitudes (
         codigo_publico,

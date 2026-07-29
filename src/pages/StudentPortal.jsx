@@ -1078,7 +1078,9 @@ export default function StudentPortal() {
           )}
 
           {activeTab === "inscripcion" &&
-            (mySolicitud && mySolicitud.estado !== "Observado" ? (
+            (mySolicitud &&
+            mySolicitud.estado !== "Observado" &&
+            mySolicitud.estado !== "Rechazado" ? (
               <AlreadySubmittedCard
                 solicitud={mySolicitud}
                 goToEstado={() => setActiveTab("estado")}
@@ -1086,7 +1088,9 @@ export default function StudentPortal() {
             ) : (
               <StudentWizard
                 onCompleted={handleCompletedWizard}
-                existingSolicitud={mySolicitud}
+                existingSolicitud={
+                  mySolicitud?.estado === "Observado" ? mySolicitud : null
+                }
               />
             ))}
 
@@ -1292,6 +1296,7 @@ function OverviewSection({ mySolicitud, goToInscripcion, goToEstado }) {
 
 function AlreadySubmittedCard({ solicitud, goToEstado }) {
   const isApproved = solicitud?.estado === "Aprobado";
+  const isRejected = solicitud?.estado === "Rechazado";
 
   return (
     <div className="bg-white rounded-2xl shadow-md border border-slate-200 p-8 max-w-3xl">
@@ -1302,6 +1307,8 @@ function AlreadySubmittedCard({ solicitud, goToEstado }) {
         <h2 className="text-2xl font-semibold text-slate-900 mt-1">
           {isApproved
             ? "Ya tienes aprobado el TCU"
+            : isRejected
+            ? "Tu anteproyecto fue rechazado"
             : "Ya tienes un anteproyecto registrado"}
         </h2>
       </div>
@@ -1321,8 +1328,10 @@ function AlreadySubmittedCard({ solicitud, goToEstado }) {
         >
           {isApproved
             ? "Ya tienes aprobado el TCU. Ve a Estado para descargar tu comprobante y revisar el código de aprobación."
+            : isRejected
+            ? "Tu anteproyecto fue rechazado. Puedes iniciar una nueva inscripción de TCU desde este panel."
             : "Tu anteproyecto ya fue enviado y actualmente se encuentra en estado "}
-          {!isApproved && (
+          {!isApproved && !isRejected && (
             <>
               <span className="font-semibold">
                 {solicitud?.estado || "Enviado"}
@@ -1339,6 +1348,8 @@ function AlreadySubmittedCard({ solicitud, goToEstado }) {
         >
           {isApproved
             ? "No puedes registrar otro anteproyecto porque el proceso ya quedó aprobado."
+            : isRejected
+            ? "Revisa las observaciones anteriores en Estado si necesitas tomarlas como referencia."
             : "Desde aquí no puedes crear otro anteproyecto mientras este proceso siga activo. Puedes revisar el seguimiento, historial y observaciones en la sección de estado."}
         </p>
       </div>
