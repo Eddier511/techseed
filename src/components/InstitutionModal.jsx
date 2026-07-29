@@ -6,7 +6,6 @@ const initialForm = {
   cedula_juridica: "",
   supervisor_nombre: "",
   supervisor_cargo: "",
-  supervisor_email: "",
   contacto_email: "",
   tipo_servicio: "",
   estado: "Habilitada",
@@ -31,8 +30,8 @@ export default function InstitutionModal({
         cedula_juridica: institutionData.cedula_juridica || "",
         supervisor_nombre: institutionData.supervisor_nombre || "",
         supervisor_cargo: institutionData.supervisor_cargo || "",
-        supervisor_email: institutionData.supervisor_email || "",
-        contacto_email: institutionData.contacto_email || "",
+        contacto_email:
+          institutionData.contacto_email || institutionData.supervisor_email || "",
         tipo_servicio: institutionData.tipo_servicio || "",
         estado: institutionData.estado || "Deshabilitada",
       });
@@ -161,21 +160,7 @@ export default function InstitutionModal({
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Correo del supervisor
-                </label>
-                <input
-                  name="supervisor_email"
-                  type="email"
-                  value={form.supervisor_email}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
-                  placeholder="Ej: ana@institucion.org"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Correo de contacto general
+                  Correo
                 </label>
                 <input
                   name="contacto_email"
@@ -183,7 +168,7 @@ export default function InstitutionModal({
                   value={form.contacto_email}
                   onChange={handleChange}
                   className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
-                  placeholder="Ej: contacto@institucion.org"
+                  placeholder="Ej: ana@institucion.org"
                 />
               </div>
             </div>

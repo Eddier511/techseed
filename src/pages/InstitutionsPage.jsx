@@ -26,6 +26,8 @@ const getStatusClass = (status) => {
 function mapInstitutionFromApi(apiInst) {
   if (!apiInst) return null;
 
+  const contactoEmail = apiInst.contacto_email || apiInst.supervisor_email || "";
+
   return {
     id: apiInst.id,
     nombre: apiInst.nombre || "",
@@ -33,7 +35,7 @@ function mapInstitutionFromApi(apiInst) {
     supervisor_nombre: apiInst.supervisor_nombre || "",
     supervisor_cargo: apiInst.supervisor_cargo || "",
     supervisor_email: apiInst.supervisor_email || "",
-    contacto_email: apiInst.contacto_email || "",
+    contacto_email: contactoEmail,
     tipo_servicio: apiInst.tipo_servicio || "",
     estado: apiInst.estado || "Deshabilitada",
     created_at: apiInst.created_at || null,
@@ -128,7 +130,6 @@ export default function InstitutionsPage() {
       cedula_juridica: formData.cedula_juridica?.trim() || "",
       supervisor_nombre: formData.supervisor_nombre?.trim() || "",
       supervisor_cargo: formData.supervisor_cargo?.trim() || "",
-      supervisor_email: formData.supervisor_email?.trim() || "",
       contacto_email: formData.contacto_email?.trim() || "",
       tipo_servicio: formData.tipo_servicio?.trim() || "",
       estado: formData.estado || "Habilitada",
@@ -138,10 +139,10 @@ export default function InstitutionsPage() {
       !payload.nombre ||
       !payload.cedula_juridica ||
       !payload.supervisor_nombre ||
-      !payload.supervisor_email
+      !payload.contacto_email
     ) {
       toast.error(
-        "Nombre, cédula jurídica, supervisor y correo del supervisor son requeridos.",
+        "Nombre, cédula jurídica, supervisor y correo son requeridos.",
       );
       return;
     }
@@ -194,9 +195,6 @@ export default function InstitutionsPage() {
           .toLowerCase()
           .includes(searchText) ||
         String(inst.supervisor_nombre || "")
-          .toLowerCase()
-          .includes(searchText) ||
-        String(inst.supervisor_email || "")
           .toLowerCase()
           .includes(searchText) ||
         String(inst.contacto_email || "")
@@ -393,7 +391,7 @@ export default function InstitutionsPage() {
                     <tr>
                       <th className="p-3 text-left">Institución</th>
                       <th className="p-3 text-left">Supervisor</th>
-                      <th className="p-3 text-left">Correos</th>
+                      <th className="p-3 text-left">Correo</th>
                       <th className="p-3 text-left">Tipo</th>
                       <th className="p-3 text-left">Estado</th>
                       <th className="p-3 text-left">Acciones</th>
@@ -436,10 +434,7 @@ export default function InstitutionsPage() {
                           </td>
 
                           <td className="p-3 text-slate-700">
-                            <p>{inst.supervisor_email || "-"}</p>
-                            <p className="text-xs text-slate-500 mt-1">
-                              {inst.contacto_email || "-"}
-                            </p>
+                            {inst.contacto_email || "-"}
                           </td>
 
                           <td className="p-3 text-slate-700">

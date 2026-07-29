@@ -420,8 +420,12 @@ export default function SolicitudModal({
                   value={institucionDetalle?.supervisor_cargo || "—"}
                 />
                 <Field
-                  label="Correo supervisor"
-                  value={institucionDetalle?.supervisor_email || "—"}
+                  label="Correo"
+                  value={
+                    institucionDetalle?.contacto_email ||
+                    institucionDetalle?.supervisor_email ||
+                    "—"
+                  }
                 />
                 <Field
                   label="Tipo de servicio"

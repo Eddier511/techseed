@@ -42,6 +42,7 @@ const initialFormData = {
   institucion: "",
   institucion_cedula: "",
   institucion_supervisor: "",
+  institucion_supervisor_cargo: "",
   institucion_correo: "",
   institucion_tipo_servicio: "",
 
@@ -592,6 +593,7 @@ function StudentWizard({ onCompleted, existingSolicitud = null }) {
     field("Institución", data.institucion || "No seleccionada");
     field("Cédula jurídica", data.institucion_cedula);
     field("Supervisor", data.institucion_supervisor);
+    field("Cargo supervisor", data.institucion_supervisor_cargo);
     field("Correo", data.institucion_correo);
     field("Tipo de servicio", data.institucion_tipo_servicio);
 
@@ -1569,6 +1571,7 @@ function Step2_Institucion({
   const [newName, setNewName] = useState("");
   const [newCedulaJuridica, setNewCedulaJuridica] = useState("");
   const [newSupervisor, setNewSupervisor] = useState("");
+  const [newSupervisorCargo, setNewSupervisorCargo] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [newType, setNewType] = useState("");
   const [saving, setSaving] = useState(false);
@@ -1596,7 +1599,7 @@ function Step2_Institucion({
       String(inst.supervisor_nombre || "")
         .toLowerCase()
         .includes(q) ||
-      String(inst.contacto_email || "")
+      String(inst.contacto_email || inst.supervisor_email || "")
         .toLowerCase()
         .includes(q) ||
       String(inst.tipo_servicio || "")
@@ -1627,8 +1630,14 @@ function Step2_Institucion({
     });
     handleChange({
       target: {
+        name: "institucion_supervisor_cargo",
+        value: inst.supervisor_cargo || "",
+      },
+    });
+    handleChange({
+      target: {
         name: "institucion_correo",
-        value: inst.supervisor_email || inst.contacto_email || "",
+        value: inst.contacto_email || inst.supervisor_email || "",
       },
     });
     handleChange({
@@ -1646,7 +1655,7 @@ function Step2_Institucion({
       nombre: newName.trim(),
       cedula_juridica: newCedulaJuridica.trim(),
       supervisor_nombre: newSupervisor.trim(),
-      supervisor_email: newEmail.trim(),
+      supervisor_cargo: newSupervisorCargo.trim(),
       contacto_email: newEmail.trim(),
       tipo_servicio: newType.trim(),
     };
@@ -1655,7 +1664,7 @@ function Step2_Institucion({
       !payload.nombre ||
       !payload.cedula_juridica ||
       !payload.supervisor_nombre ||
-      !payload.supervisor_email ||
+      !payload.contacto_email ||
       !payload.tipo_servicio
     ) {
       onNotify(
@@ -1694,8 +1703,14 @@ function Step2_Institucion({
       });
       handleChange({
         target: {
+          name: "institucion_supervisor_cargo",
+          value: nueva.supervisor_cargo || "",
+        },
+      });
+      handleChange({
+        target: {
           name: "institucion_correo",
-          value: nueva.supervisor_email || nueva.contacto_email || "",
+          value: nueva.contacto_email || nueva.supervisor_email || "",
         },
       });
       handleChange({
@@ -1709,6 +1724,7 @@ function Step2_Institucion({
       setNewName("");
       setNewCedulaJuridica("");
       setNewSupervisor("");
+      setNewSupervisorCargo("");
       setNewEmail("");
       setNewType("");
     } catch (err) {
@@ -1741,7 +1757,7 @@ function Step2_Institucion({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             disabled={disabled}
-            placeholder="Buscar por nombre, cédula jurídica, supervisor o correo..."
+            placeholder="Buscar por nombre, cédula jurídica, supervisor, correo o tipo..."
             className={`p-2 border rounded-md w-full md:max-w-lg ${
               disabled ? "bg-slate-100 text-slate-500 cursor-not-allowed" : ""
             }`}
@@ -1770,7 +1786,7 @@ function Step2_Institucion({
             disabled={disabled}
             className="px-4 py-2 text-xs bg-[rgba(2,14,159,1)] text-white rounded-md hover:bg-indigo-900 disabled:opacity-50"
           >
-            No la encontré → Registrar
+            Solicitar nueva institución
           </button>
         </div>
 
@@ -1810,10 +1826,15 @@ function Step2_Institucion({
                       {inst.cedula_juridica || "-"}
                     </td>
                     <td className="p-3 border-b text-slate-600">
-                      {inst.supervisor_nombre || "-"}
+                      <p>{inst.supervisor_nombre || "-"}</p>
+                      {inst.supervisor_cargo && (
+                        <p className="text-xs text-slate-500 mt-1">
+                          {inst.supervisor_cargo}
+                        </p>
+                      )}
                     </td>
                     <td className="p-3 border-b text-slate-600">
-                      {inst.contacto_email || "-"}
+                      {inst.contacto_email || inst.supervisor_email || "-"}
                     </td>
                     <td className="p-3 border-b text-slate-600">
                       {inst.tipo_servicio || "-"}
@@ -1871,8 +1892,15 @@ function Step2_Institucion({
             onChange={(e) => setNewSupervisor(e.target.value)}
           />
           <input
+            type="text"
+            placeholder="Cargo del supervisor"
+            className="w-full p-2 border rounded-md"
+            value={newSupervisorCargo}
+            onChange={(e) => setNewSupervisorCargo(e.target.value)}
+          />
+          <input
             type="email"
-            placeholder="Correo de contacto"
+            placeholder="Correo"
             className="w-full p-2 border rounded-md"
             value={newEmail}
             onChange={(e) => setNewEmail(e.target.value)}
@@ -2789,7 +2817,11 @@ function Step6_Resumen({ formData }) {
             />
             <Field label="Supervisor" value={formData.institucion_supervisor} />
             <Field
-              label="Correo de contacto"
+              label="Cargo supervisor"
+              value={formData.institucion_supervisor_cargo}
+            />
+            <Field
+              label="Correo"
               value={formData.institucion_correo}
             />
             <Field

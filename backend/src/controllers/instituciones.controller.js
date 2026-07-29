@@ -75,15 +75,15 @@ async function createInstitucionPublic(req, res) {
     cedula_juridica,
     supervisor_nombre,
     supervisor_cargo,
-    supervisor_email,
+    contacto_email,
     tipo_servicio,
     created_by_user_id,
   } = req.body;
 
-  if (!nombre || !cedula_juridica || !supervisor_nombre || !supervisor_email) {
+  if (!nombre || !cedula_juridica || !supervisor_nombre || !contacto_email) {
     return res.status(400).json({
       message:
-        "nombre, cedula_juridica, supervisor_nombre, supervisor_email y contacto_email son requeridos",
+        "nombre, cedula_juridica, supervisor_nombre y contacto_email son requeridos",
     });
   }
 
@@ -97,17 +97,19 @@ async function createInstitucionPublic(req, res) {
         supervisor_nombre,
         supervisor_cargo,
         supervisor_email,
+        contacto_email,
         tipo_servicio,
         estado,
         created_by_user_id
       )
-      VALUES (?,?,?,?,?,?,?,?)`,
+      VALUES (?,?,?,?,?,?,?,?,?)`,
       [
         nombre,
         cedula_juridica,
         supervisor_nombre,
         supervisor_cargo || null,
-        supervisor_email,
+        null,
+        contacto_email,
         tipo_servicio || null,
         DISABLED_STATUS,
         created_by_user_id || null,
@@ -135,12 +137,19 @@ async function createInstitucion(req, res) {
     cedula_juridica,
     supervisor_nombre,
     supervisor_cargo,
-    supervisor_email,
+    contacto_email,
     tipo_servicio,
     estado,
   } = req.body;
 
   const normalizedStatus = normalizeInstitutionStatus(estado || ENABLED_STATUS);
+
+  if (!nombre || !cedula_juridica || !supervisor_nombre || !contacto_email) {
+    return res.status(400).json({
+      message:
+        "nombre, cedula_juridica, supervisor_nombre y contacto_email son requeridos",
+    });
+  }
 
   try {
     await normalizeLegacyInstitutionStatuses();
@@ -152,16 +161,18 @@ async function createInstitucion(req, res) {
         supervisor_nombre,
         supervisor_cargo,
         supervisor_email,
+        contacto_email,
         tipo_servicio,
         estado
       )
-      VALUES (?,?,?,?,?,?,?)`,
+      VALUES (?,?,?,?,?,?,?,?)`,
       [
         nombre,
         cedula_juridica,
         supervisor_nombre,
         supervisor_cargo,
-        supervisor_email,
+        null,
+        contacto_email,
         tipo_servicio,
         normalizedStatus,
       ],
@@ -189,11 +200,18 @@ async function updateInstitucion(req, res) {
     cedula_juridica,
     supervisor_nombre,
     supervisor_cargo,
-    supervisor_email,
+    contacto_email,
     tipo_servicio,
     estado,
   } = req.body;
   const normalizedStatus = normalizeInstitutionStatus(estado || ENABLED_STATUS);
+
+  if (!nombre || !cedula_juridica || !supervisor_nombre || !contacto_email) {
+    return res.status(400).json({
+      message:
+        "nombre, cedula_juridica, supervisor_nombre y contacto_email son requeridos",
+    });
+  }
 
   try {
     await normalizeLegacyInstitutionStatuses();
@@ -205,6 +223,7 @@ async function updateInstitucion(req, res) {
            supervisor_nombre = ?,
            supervisor_cargo = ?,
            supervisor_email = ?,
+           contacto_email = ?,
            tipo_servicio = ?,
            estado = ?
        WHERE id = ?`,
@@ -213,7 +232,8 @@ async function updateInstitucion(req, res) {
         cedula_juridica,
         supervisor_nombre,
         supervisor_cargo,
-        supervisor_email,
+        null,
+        contacto_email,
         tipo_servicio,
         normalizedStatus,
         id,
