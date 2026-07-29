@@ -371,11 +371,20 @@ export default function StudentStatusPage({ solicitud }) {
           drawHeader();
         }
 
-        doc.setFillColor(index % 2 === 0 ? 248 : 255, index % 2 === 0 ? 250 : 255, index % 2 === 0 ? 252 : 255);
+        doc.setFillColor(
+          index % 2 === 0 ? 248 : 255,
+          index % 2 === 0 ? 250 : 255,
+          index % 2 === 0 ? 252 : 255,
+        );
         doc.rect(marginX, y, contentWidth, rowHeight, "F");
         doc.setDrawColor(226, 232, 240);
         doc.rect(marginX, y, contentWidth, rowHeight);
-        doc.line(marginX + widths.actividad, y, marginX + widths.actividad, y + rowHeight);
+        doc.line(
+          marginX + widths.actividad,
+          y,
+          marginX + widths.actividad,
+          y + rowHeight,
+        );
         doc.line(
           marginX + widths.actividad + widths.tarea,
           y,
@@ -538,11 +547,6 @@ export default function StudentStatusPage({ solicitud }) {
             >
               Estado: {status}
             </span>
-            <p className="text-[11px] text-slate-500 max-w-xs text-right">
-              Desde este panel puedes consultar en qué estado se encuentra tu
-              anteproyecto y revisar la bitácora de cambios realizada por el
-              sistema o la coordinación.
-            </p>
           </div>
         </div>
 
