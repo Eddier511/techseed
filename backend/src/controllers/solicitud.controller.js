@@ -1,6 +1,7 @@
 const pool = require("../config/db");
 
 let approvalCodeColumnReady = false;
+const REQUIRED_TCU_HOURS = 150;
 
 function generateCodigo() {
   const num = Math.floor(Math.random() * 90000) + 10000;
@@ -61,6 +62,40 @@ function toDateOnly(dateStr) {
     console.error("Error normalizando fecha:", e);
     return null;
   }
+}
+
+function normalizeCronogramaItems(items = []) {
+  const rows = Array.isArray(items) ? items : [];
+
+  return rows
+    .map((r) => ({
+      actividad: String(r?.actividad || "").trim(),
+      tarea: String(r?.tarea || "").trim(),
+      horas: parseInt(String(r?.horas ?? "").trim(), 10),
+    }))
+    .filter((r) => r.actividad || r.tarea || Number.isFinite(r.horas));
+}
+
+function validateCronogramaItems(items = []) {
+  const clean = normalizeCronogramaItems(items);
+  const rowsAreValid =
+    clean.length > 0 &&
+    clean.every(
+      (r) =>
+        r.actividad &&
+        r.tarea &&
+        Number.isFinite(r.horas) &&
+        Number.isInteger(r.horas) &&
+        r.horas > 0 &&
+        r.horas <= 8,
+    );
+  const totalHoras = clean.reduce((acc, row) => acc + row.horas, 0);
+
+  return {
+    clean,
+    totalHoras,
+    isValid: rowsAreValid && totalHoras === REQUIRED_TCU_HOURS,
+  };
 }
 
 function normalizeStatusLabel(status) {
@@ -243,10 +278,18 @@ async function createSolicitud(req, res) {
 
   const ownerUserId = ownerUserIdBody || req.user?.id || null;
   const ownerEmail = String(ownerEmailBody || req.user?.email || "").trim();
+  const cronogramaValidation = validateCronogramaItems(cronograma_items);
 
   if (!ownerEmail) {
     return res.status(400).json({
       message: "owner_email es requerido",
+    });
+  }
+
+  if (!cronogramaValidation.isValid) {
+    return res.status(400).json({
+      message: `El cronograma debe tener filas completas y sumar exactamente ${REQUIRED_TCU_HOURS} horas.`,
+      total_horas: cronogramaValidation.totalHoras,
     });
   }
 
@@ -379,14 +422,7 @@ async function createSolicitud(req, res) {
       );
     }
 
-    const cronoArr = Array.isArray(cronograma_items) ? cronograma_items : [];
-    const cronoClean = cronoArr
-      .map((r) => ({
-        actividad: String(r?.actividad || "").trim(),
-        tarea: String(r?.tarea || "").trim(),
-        horas: parseInt(String(r?.horas ?? "").trim(), 10),
-      }))
-      .filter((r) => r.actividad && r.tarea && Number.isFinite(r.horas));
+    const cronoClean = cronogramaValidation.clean;
 
     if (cronoClean.length) {
       const values = cronoClean.map((r, i) => [
@@ -829,20 +865,22 @@ async function resubmitSolicitud(req, res) {
     }
 
     if (revisionFlags.cronograma_editable) {
+      const cronogramaValidation = validateCronogramaItems(cronograma_items);
+
+      if (!cronogramaValidation.isValid) {
+        await conn.rollback();
+        return res.status(400).json({
+          message: `El cronograma debe tener filas completas y sumar exactamente ${REQUIRED_TCU_HOURS} horas.`,
+          total_horas: cronogramaValidation.totalHoras,
+        });
+      }
+
       await conn.query(
         `DELETE FROM solicitud_cronograma WHERE solicitud_id = ?`,
         [id],
       );
 
-      const cronoClean = (
-        Array.isArray(cronograma_items) ? cronograma_items : []
-      )
-        .map((r) => ({
-          actividad: String(r?.actividad || "").trim(),
-          tarea: String(r?.tarea || "").trim(),
-          horas: parseInt(String(r?.horas ?? "").trim(), 10),
-        }))
-        .filter((r) => r.actividad && r.tarea && Number.isFinite(r.horas));
+      const cronoClean = cronogramaValidation.clean;
 
       if (cronoClean.length) {
         const values = cronoClean.map((r, i) => [

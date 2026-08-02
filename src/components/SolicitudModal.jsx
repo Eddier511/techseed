@@ -282,18 +282,18 @@ export default function SolicitudModal({
   const showActions = canManage && isEditableStatus;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 md:p-4">
-      <div className="relative w-full max-w-6xl max-h-[90vh] bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
-        <div className="flex items-center justify-between px-7 py-5 border-b border-slate-200 bg-slate-50">
-          <div>
+    <div className="fixed inset-0 z-50 flex items-stretch justify-center bg-black/40 p-2 md:items-center md:p-4">
+      <div className="relative flex w-full max-w-6xl max-h-[calc(100dvh-1rem)] md:max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-2xl md:rounded-3xl bg-white shadow-2xl border border-slate-200">
+        <div className="shrink-0 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-4 md:px-7 py-4 md:py-5 border-b border-slate-200 bg-slate-50">
+          <div className="min-w-0">
             <p className="text-xs uppercase tracking-wide text-slate-500">
               Revisión de anteproyecto
             </p>
-            <h3 className="text-xl font-semibold text-slate-900">
+            <h3 className="text-lg md:text-xl font-semibold text-slate-900 truncate">
               Solicitud #{internalId}
             </h3>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex shrink-0 items-center justify-between gap-3 sm:justify-end">
             <span
               className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColor}`}
             >
@@ -308,8 +308,8 @@ export default function SolicitudModal({
           </div>
         </div>
 
-        <div className="px-7 pt-4">
-          <div className="flex flex-wrap gap-2">
+        <div className="shrink-0 px-4 md:px-7 pt-4">
+          <div className="flex gap-2 overflow-x-auto pb-1">
             {TABS.map((t) => {
               const active = activeTab === t.id;
               return (
@@ -321,6 +321,7 @@ export default function SolicitudModal({
                     active
                       ? "bg-slate-900 text-white border-slate-900"
                       : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50",
+                    "shrink-0",
                   ].join(" ")}
                 >
                   {t.label}
@@ -357,7 +358,7 @@ export default function SolicitudModal({
           )}
         </div>
 
-        <div className="px-7 py-5 space-y-5 max-h-[62vh] overflow-y-auto">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 md:px-7 py-5 space-y-5">
           {activeTab === "estudiante" && (
             <section className="space-y-3">
               <h4 className="text-sm font-semibold text-slate-900">
@@ -639,16 +640,16 @@ export default function SolicitudModal({
           </section>
         </div>
 
-        <div className="flex justify-between items-center px-7 py-4 border-t border-slate-200 bg-slate-50">
+        <div className="shrink-0 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-4 md:px-7 py-3 md:py-4 border-t border-slate-200 bg-slate-50">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-xs md:text-sm font-medium text-slate-700 bg-slate-100 rounded-xl hover:bg-slate-200"
+            className="w-full sm:w-auto px-4 py-2 text-xs md:text-sm font-medium text-slate-700 bg-slate-100 rounded-xl hover:bg-slate-200"
           >
             Cerrar
           </button>
 
           {showActions && (
-            <div className="flex flex-wrap gap-2">
+            <div className="grid w-full grid-cols-1 gap-2 sm:w-auto sm:grid-cols-3">
               <button
                 onClick={handleReturnClick}
                 className="px-4 py-2 text-xs md:text-sm font-semibold text-amber-800 bg-amber-100 rounded-xl hover:bg-amber-200"
