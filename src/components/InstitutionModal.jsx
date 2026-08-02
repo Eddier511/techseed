@@ -53,9 +53,9 @@ export default function InstitutionModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="relative w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
+    <div className="fixed inset-0 z-50 flex items-stretch justify-center bg-black/40 p-2 md:items-center md:p-4">
+      <div className="relative flex w-full max-w-3xl max-h-[calc(100dvh-1rem)] md:max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-2xl md:rounded-3xl bg-white shadow-2xl border border-slate-200">
+        <div className="shrink-0 flex items-center justify-between px-4 md:px-6 py-4 border-b border-slate-200 bg-slate-50">
           <div>
             <p className="text-xs uppercase tracking-wide text-slate-500">
               {isEditMode ? "Institución registrada" : "Nueva institución TCU"}
@@ -78,7 +78,7 @@ export default function InstitutionModal({
         <form
           id="institution-form"
           onSubmit={handleSubmit}
-          className="px-6 py-5 space-y-5 max-h-[70vh] overflow-y-auto"
+          className="min-h-0 flex-1 overflow-y-auto px-4 md:px-6 py-5 space-y-5"
         >
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -197,10 +197,10 @@ export default function InstitutionModal({
           </div>
         </form>
 
-        <div className="flex justify-between items-center px-6 py-4 border-t border-slate-200 bg-slate-50">
+        <div className="shrink-0 flex flex-col-reverse sm:flex-row sm:justify-between sm:items-center gap-2 px-4 md:px-6 py-4 border-t border-slate-200 bg-slate-50">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-xs md:text-sm font-medium text-slate-700 bg-slate-100 rounded-xl hover:bg-slate-200"
+            className="w-full sm:w-auto px-4 py-2 text-xs md:text-sm font-medium text-slate-700 bg-slate-100 rounded-xl hover:bg-slate-200"
           >
             Cancelar
           </button>
@@ -208,7 +208,7 @@ export default function InstitutionModal({
           <button
             type="submit"
             form="institution-form"
-            className="px-5 py-2 text-xs md:text-sm font-semibold text-white rounded-xl shadow-sm bg-[rgba(2,14,159,1)] hover:bg-indigo-900"
+            className="w-full sm:w-auto px-5 py-2 text-xs md:text-sm font-semibold text-white rounded-xl shadow-sm bg-[rgba(2,14,159,1)] hover:bg-indigo-900"
           >
             {isEditMode ? "Actualizar institución" : "Guardar institución"}
           </button>

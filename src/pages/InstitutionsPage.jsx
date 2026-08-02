@@ -386,7 +386,7 @@ export default function InstitutionsPage() {
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full min-w-[920px] text-sm">
                   <thead className="bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500">
                     <tr>
                       <th className="p-3 text-left">Institución</th>

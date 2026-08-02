@@ -1089,6 +1089,35 @@ export default function StudentPortal() {
           </div>
         </header>
 
+        <nav className="md:hidden border-b border-slate-200 bg-white px-3 py-2">
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            <MobileNavItem
+              icon={LuLayoutDashboard}
+              label="Resumen"
+              active={activeTab === "overview"}
+              onClick={() => setActiveTab("overview")}
+            />
+            <MobileNavItem
+              icon={LuFilePlus2}
+              label={
+                mySolicitud?.estado === "Aprobado"
+                  ? "TCU aprobado"
+                  : mySolicitud?.estado === "Observado"
+                  ? "Corregir"
+                  : "Inscripcion"
+              }
+              active={activeTab === "inscripcion"}
+              onClick={() => setActiveTab("inscripcion")}
+            />
+            <MobileNavItem
+              icon={LuFileSearch}
+              label="Estado"
+              active={activeTab === "estado"}
+              onClick={() => setActiveTab("estado")}
+            />
+          </div>
+        </nav>
+
         <main className="flex-1 p-4 md:p-6 bg-slate-50 overflow-y-auto">
           {activeTab === "overview" && (
             <OverviewSection
@@ -1210,6 +1239,21 @@ function SidebarItem({ icon: Icon, label, active, onClick }) {
   return (
     <button onClick={onClick} className={base + activeClasses}>
       {Icon && <Icon className="text-lg" />}
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function MobileNavItem({ icon: Icon, label, active, onClick }) {
+  const base =
+    "shrink-0 inline-flex items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors";
+  const activeClasses = active
+    ? "border-[#1453DB] bg-[#1453DB] text-white"
+    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50";
+
+  return (
+    <button type="button" onClick={onClick} className={base + " " + activeClasses}>
+      {Icon && <Icon className="text-base" />}
       <span>{label}</span>
     </button>
   );

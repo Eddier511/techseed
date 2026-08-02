@@ -299,7 +299,7 @@ export default function ReportsPage() {
 
             <ReportCard title="Atención por coordinador">
               <div className="overflow-x-auto border border-slate-200 rounded-2xl">
-                <table className="w-full text-sm">
+                <table className="w-full min-w-[760px] text-sm">
                   <thead className="bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500">
                     <tr>
                       <th className="p-3 text-left">Coordinador</th>
@@ -355,7 +355,7 @@ export default function ReportsPage() {
 
           <ReportCard title="Detalle de solicitudes">
             <div className="overflow-x-auto border border-slate-200 rounded-2xl">
-              <table className="w-full text-sm">
+              <table className="w-full min-w-[900px] text-sm">
                 <thead className="bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500">
                   <tr>
                     <th className="p-3 text-left">Código</th>
