@@ -2977,12 +2977,17 @@ function Step6_Resumen({ formData }) {
             Objetivos
           </h4>
           <div className="space-y-2">
+            <h2 className="text-sm font-medium text-slate-600 mb-3">
+              Objetivo General
+            </h2>
             <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
               <span className="text-slate-800">{formData.objetivoGeneral}</span>
             </div>
           </div>
           <br />
-          <Field label="Objetivos específicos" />
+          <h2 className="text-sm font-medium text-slate-600 mb-3">
+            Objetivos específicos
+          </h2>
           {objetivosItems.length ? (
             <div className="space-y-2">
               {objetivosItems.map((obj, i) => (
@@ -3005,15 +3010,16 @@ function Step6_Resumen({ formData }) {
         </div>
 
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <h4 className="text-base font-semibold text-slate-900 mb-3">
+          <h4 className="text-sm font-medium text-slate-600 mb-3">
             Estrategia de solución y Cronograma
           </h4>
           <Field
             label="Estrategia de solución"
             value={formData.estrategiaSolucion}
           />
-          <br />
-          <Field label="Cronograma" />
+          <h2 className="text-sm font-medium text-slate-600 mb-3">
+            Cronograma
+          </h2>
           {cronogramaItems.length ? (
             <div className="overflow-x-auto">
               <table className="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
