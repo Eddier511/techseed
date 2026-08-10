@@ -3017,7 +3017,7 @@ function Step6_Resumen({ formData }) {
             label="Estrategia de solución"
             value={formData.estrategiaSolucion}
           />
-          <h2 className="text-sm font-medium text-slate-600 mt-4 mb-3">
+          <h2 className="text-sm font-medium text-slate-600 mt-3 mb-3">
             Cronograma
           </h2>
           {cronogramaItems.length ? (
