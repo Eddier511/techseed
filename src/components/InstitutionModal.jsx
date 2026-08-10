@@ -11,6 +11,8 @@ const initialForm = {
   estado: "Habilitada",
 };
 
+const digitsOnly = (value) => String(value || "").replace(/\D/g, "");
+
 export default function InstitutionModal({
   isOpen,
   onClose,
@@ -42,7 +44,10 @@ export default function InstitutionModal({
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => ({
+      ...prev,
+      [name]: name === "cedula_juridica" ? digitsOnly(value) : value,
+    }));
   };
 
   const handleSubmit = (e) => {
@@ -102,10 +107,12 @@ export default function InstitutionModal({
               <input
                 name="cedula_juridica"
                 type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={form.cedula_juridica}
                 onChange={handleChange}
                 className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[rgba(2,14,159,1)] focus:border-[rgba(2,14,159,1)]"
-                placeholder="Ej: 3-101-999999"
+                placeholder="Ej: 3101999999"
               />
             </div>
 
@@ -165,6 +172,7 @@ export default function InstitutionModal({
                 <input
                   name="contacto_email"
                   type="email"
+                  inputMode="email"
                   value={form.contacto_email}
                   onChange={handleChange}
                   className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"

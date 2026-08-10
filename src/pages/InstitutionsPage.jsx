@@ -12,6 +12,10 @@ import { useAuth } from "../contexts/AuthContext.jsx";
 import InstitutionModal from "../components/InstitutionModal";
 import api from "../api/apiClient";
 
+const digitsOnly = (value) => String(value || "").replace(/\D/g, "");
+const isValidEmail = (value) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
+
 const getStatusClass = (status) => {
   switch (status) {
     case "Habilitada":
@@ -144,6 +148,16 @@ export default function InstitutionsPage() {
       toast.error(
         "Nombre, cédula jurídica, supervisor y correo son requeridos.",
       );
+      return;
+    }
+
+    if (digitsOnly(payload.cedula_juridica) !== payload.cedula_juridica) {
+      toast.error("La cedula juridica debe contener solo numeros.");
+      return;
+    }
+
+    if (!isValidEmail(payload.contacto_email)) {
+      toast.error("Escribe un correo valido para la institucion.");
       return;
     }
 
