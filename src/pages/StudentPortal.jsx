@@ -58,6 +58,8 @@ const initialFormData = {
 };
 
 const REQUIRED_TCU_HOURS = 150;
+const digitsOnly = (value) => String(value || "").replace(/\D/g, "");
+const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
 
 function normalizeFormData(source) {
   if (!source) return initialFormData;
@@ -243,6 +245,26 @@ function StudentWizard({ onCompleted, existingSolicitud = null }) {
         "error",
       );
       return false;
+    }
+
+    if (currentStep === 1) {
+      if (digitsOnly(formData.cedula) !== String(formData.cedula || "")) {
+        showMessage("La identificacion debe contener solo numeros.", "error");
+        return false;
+      }
+
+      if (
+        digitsOnly(formData.estudiante_phone) !==
+        String(formData.estudiante_phone || "")
+      ) {
+        showMessage("El numero telefonico debe contener solo numeros.", "error");
+        return false;
+      }
+
+      if (!isValidEmail(formData.estudiante_email)) {
+        showMessage("Escribe un correo electronico valido.", "error");
+        return false;
+      }
     }
 
     if (currentStep === 4) {
@@ -1561,10 +1583,16 @@ function Step1_DatosPersonales({
           <input
             name="cedula"
             value={formData.cedula}
-            onChange={handleChange}
+            onChange={(e) =>
+              handleChange({
+                target: { name: "cedula", value: digitsOnly(e.target.value) },
+              })
+            }
             type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             disabled={disabled}
-            placeholder="Ej: 1-2345-6789"
+            placeholder="Ej: 123456789"
             className={`p-2 border rounded-md ${
               disabled ? "bg-slate-100 text-slate-500 cursor-not-allowed" : ""
             }`}
@@ -1621,10 +1649,19 @@ function Step1_DatosPersonales({
           <input
             name="estudiante_phone"
             value={formData.estudiante_phone}
-            onChange={handleChange}
+            onChange={(e) =>
+              handleChange({
+                target: {
+                  name: "estudiante_phone",
+                  value: digitsOnly(e.target.value),
+                },
+              })
+            }
             type="tel"
+            inputMode="numeric"
+            pattern="[0-9]*"
             disabled={disabled}
-            placeholder="8888-8888"
+            placeholder="88888888"
             className={`p-2 border rounded-md ${
               disabled ? "bg-slate-100 text-slate-500 cursor-not-allowed" : ""
             }`}
@@ -1819,6 +1856,16 @@ function Step2_Institucion({
         "Por favor, completá nombre, cédula jurídica, supervisor, correo y tipo de servicio para la institución.",
         "error",
       );
+      return;
+    }
+
+    if (digitsOnly(payload.cedula_juridica) !== payload.cedula_juridica) {
+      onNotify("La cedula juridica debe contener solo numeros.", "error");
+      return;
+    }
+
+    if (!isValidEmail(payload.contacto_email)) {
+      onNotify("Escribe un correo valido para la institucion.", "error");
       return;
     }
 
@@ -2029,8 +2076,10 @@ function Step2_Institucion({
             type="text"
             placeholder="Cédula jurídica"
             className="w-full p-2 border rounded-md"
+            inputMode="numeric"
+            pattern="[0-9]*"
             value={newCedulaJuridica}
-            onChange={(e) => setNewCedulaJuridica(e.target.value)}
+            onChange={(e) => setNewCedulaJuridica(digitsOnly(e.target.value))}
           />
           <input
             type="text"
@@ -2049,6 +2098,7 @@ function Step2_Institucion({
           <input
             type="email"
             placeholder="Correo"
+            inputMode="email"
             className="w-full p-2 border rounded-md"
             value={newEmail}
             onChange={(e) => setNewEmail(e.target.value)}
@@ -3107,4 +3157,5 @@ function Step6_Resumen({ formData }) {
     </div>
   );
 }
+
 
