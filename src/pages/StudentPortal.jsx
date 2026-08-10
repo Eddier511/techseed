@@ -349,13 +349,69 @@ function StudentWizard({ onCompleted, existingSolicitud = null }) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const downloadResumenPDF = (data) => {
+  const downloadResumenPDF = async (data) => {
     const doc = new jsPDF({ unit: "mm", format: "letter" });
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const marginX = 18;
     const contentWidth = pageWidth - marginX * 2;
     let y = 18;
+
+    const value = (...items) =>
+      items.find((item) => String(item || "").trim()) || "";
+
+    const institutionId = data?.institucion_id;
+    const selectedInstitutionName = String(data?.institucion || "").trim();
+    const sameInstitution = (inst) =>
+      (institutionId && String(inst.id) === String(institutionId)) ||
+      (selectedInstitutionName &&
+        String(inst.nombre || "").trim().toLowerCase() ===
+          selectedInstitutionName.toLowerCase());
+
+    let institutionDetail = (instituciones || []).find(sameInstitution) || null;
+
+    if (!institutionDetail && (institutionId || selectedInstitutionName)) {
+      try {
+        const res = await api.get("/instituciones");
+        const list = Array.isArray(res.data) ? res.data : [];
+        institutionDetail = list.find(sameInstitution) || null;
+      } catch (err) {
+        console.warn("No se pudo cargar la institucion para el PDF:", err);
+      }
+    }
+
+    const institutionName = value(
+      institutionDetail?.nombre,
+      data.institucion,
+      data.institucion_nombre,
+    );
+    const institutionCedula = value(
+      institutionDetail?.cedula_juridica,
+      data.institucion_cedula,
+      data.cedula_juridica,
+    );
+    const institutionSupervisor = value(
+      institutionDetail?.supervisor_nombre,
+      data.institucion_supervisor,
+      data.supervisor_nombre,
+    );
+    const institutionSupervisorCargo = value(
+      institutionDetail?.supervisor_cargo,
+      data.institucion_supervisor_cargo,
+      data.supervisor_cargo,
+    );
+    const institutionEmail = value(
+      institutionDetail?.contacto_email,
+      institutionDetail?.supervisor_email,
+      data.institucion_correo,
+      data.contacto_email,
+      data.supervisor_email,
+    );
+    const institutionServiceType = value(
+      institutionDetail?.tipo_servicio,
+      data.institucion_tipo_servicio,
+      data.tipo_servicio,
+    );
 
     const ensureSpace = (height = 14) => {
       if (y + height <= pageHeight - 18) return;
@@ -617,12 +673,12 @@ function StudentWizard({ onCompleted, existingSolicitud = null }) {
     field("Lugar de trabajo", data.lugar_trabajo);
 
     sectionTitle("2. Datos de la institución");
-    field("Institución", data.institucion || "No seleccionada");
-    field("Cédula jurídica", data.institucion_cedula);
-    field("Supervisor", data.institucion_supervisor);
-    field("Cargo supervisor", data.institucion_supervisor_cargo);
-    field("Correo", data.institucion_correo);
-    field("Tipo de servicio", data.institucion_tipo_servicio);
+    field("Institución", institutionName || "No seleccionada");
+    field("Cédula jurídica", institutionCedula);
+    field("Supervisor", institutionSupervisor);
+    field("Cargo supervisor", institutionSupervisorCargo);
+    field("Correo", institutionEmail);
+    field("Tipo de servicio", institutionServiceType);
 
     sectionTitle("3. Datos del proyecto");
     field("Título", data.tituloProyecto || "Sin título");
@@ -772,7 +828,7 @@ function StudentWizard({ onCompleted, existingSolicitud = null }) {
     }
 
     try {
-      downloadResumenPDF(formData);
+      await downloadResumenPDF(formData);
 
       if (isObservedMode && existingSolicitud?.id) {
         await resubmitSolicitud(existingSolicitud.id, formData);
@@ -3051,3 +3107,4 @@ function Step6_Resumen({ formData }) {
     </div>
   );
 }
+
