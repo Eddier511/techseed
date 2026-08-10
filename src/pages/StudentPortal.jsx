@@ -218,9 +218,7 @@ function StudentWizard({ onCompleted, existingSolicitud = null }) {
       ? formData.objetivosEspecificosItems
       : [];
 
-    return items
-      .slice(3)
-      .every((item) => String(item || "").trim().length > 0);
+    return items.slice(3).every((item) => String(item || "").trim().length > 0);
   };
 
   const showMessage = (text, type = "success") => {
@@ -442,7 +440,10 @@ function StudentWizard({ onCompleted, existingSolicitud = null }) {
     };
 
     const paragraph = (text) => {
-      const lines = doc.splitTextToSize(String(text || "No indicado"), contentWidth);
+      const lines = doc.splitTextToSize(
+        String(text || "No indicado"),
+        contentWidth,
+      );
       ensureSpace(lines.length * 5 + 4);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
@@ -451,7 +452,10 @@ function StudentWizard({ onCompleted, existingSolicitud = null }) {
     };
 
     const bullet = (index, text) => {
-      const lines = doc.splitTextToSize(String(text || "No indicado"), contentWidth - 10);
+      const lines = doc.splitTextToSize(
+        String(text || "No indicado"),
+        contentWidth - 10,
+      );
       ensureSpace(lines.length * 5 + 3);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(9);
@@ -529,7 +533,12 @@ function StudentWizard({ onCompleted, existingSolicitud = null }) {
         doc.rect(marginX, y, contentWidth, rowHeight, "F");
         doc.setDrawColor(226, 232, 240);
         doc.rect(marginX, y, contentWidth, rowHeight);
-        doc.line(marginX + widths.actividad, y, marginX + widths.actividad, y + rowHeight);
+        doc.line(
+          marginX + widths.actividad,
+          y,
+          marginX + widths.actividad,
+          y + rowHeight,
+        );
         doc.line(
           marginX + widths.actividad + widths.tarea,
           y,
@@ -617,7 +626,10 @@ function StudentWizard({ onCompleted, existingSolicitud = null }) {
 
     sectionTitle("3. Datos del proyecto");
     field("Título", data.tituloProyecto || "Sin título");
-    field("Estado", isObservedMode ? "Reenviado para revisión" : "Enviado para revisión");
+    field(
+      "Estado",
+      isObservedMode ? "Reenviado para revisión" : "Enviado para revisión",
+    );
     field("Fecha de generación", new Date().toLocaleString("es-CR"));
 
     sectionTitle("4. Descripción y justificación");
@@ -626,13 +638,7 @@ function StudentWizard({ onCompleted, existingSolicitud = null }) {
     sectionTitle("5. Objetivo general");
     paragraph(data.objetivoGeneral || "Sin objetivo general");
 
-    sectionTitle("6. Beneficiarios");
-    paragraph(data.beneficiarios || "Sin dato");
-
-    sectionTitle("7. Estrategia y pertinencia de solución");
-    paragraph(data.estrategiaSolucion || "Sin dato");
-
-    sectionTitle("8. Objetivos específicos");
+    sectionTitle("6. Objetivos específicos");
     if (objetivosItems.length) {
       objetivosItems.forEach((obj, index) => {
         bullet(index + 1, obj);
@@ -640,6 +646,12 @@ function StudentWizard({ onCompleted, existingSolicitud = null }) {
     } else {
       paragraph("No se agregaron objetivos específicos.");
     }
+
+    sectionTitle("7. Beneficiarios");
+    paragraph(data.beneficiarios || "Sin dato");
+
+    sectionTitle("8. Estrategia y pertinencia de solución");
+    paragraph(data.estrategiaSolucion || "Sin dato");
 
     sectionTitle("9. Cronograma");
     if (cronogramaItems.length) {
@@ -1031,8 +1043,8 @@ export default function StudentPortal() {
               mySolicitud?.estado === "Aprobado"
                 ? "TCU aprobado"
                 : mySolicitud?.estado === "Observado"
-                ? "Corregir anteproyecto"
-                : "Inscripción de anteproyecto"
+                  ? "Corregir anteproyecto"
+                  : "Inscripción de anteproyecto"
             }
             active={activeTab === "inscripcion"}
             onClick={() => setActiveTab("inscripcion")}
@@ -1103,8 +1115,8 @@ export default function StudentPortal() {
                 mySolicitud?.estado === "Aprobado"
                   ? "TCU aprobado"
                   : mySolicitud?.estado === "Observado"
-                  ? "Corregir"
-                  : "Inscripcion"
+                    ? "Corregir"
+                    : "Inscripcion"
               }
               active={activeTab === "inscripcion"}
               onClick={() => setActiveTab("inscripcion")}
@@ -1252,7 +1264,11 @@ function MobileNavItem({ icon: Icon, label, active, onClick }) {
     : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50";
 
   return (
-    <button type="button" onClick={onClick} className={base + " " + activeClasses}>
+    <button
+      type="button"
+      onClick={onClick}
+      className={base + " " + activeClasses}
+    >
       {Icon && <Icon className="text-base" />}
       <span>{label}</span>
     </button>
@@ -1309,8 +1325,8 @@ function OverviewSection({ mySolicitud, goToInscripcion, goToEstado }) {
               {isApproved
                 ? "Ver aprobación"
                 : mySolicitud?.estado === "Observado"
-                ? "Corregir anteproyecto"
-                : "Inscribir anteproyecto"}
+                  ? "Corregir anteproyecto"
+                  : "Inscribir anteproyecto"}
             </button>
             <button
               onClick={goToEstado}
@@ -1350,8 +1366,8 @@ function OverviewSection({ mySolicitud, goToInscripcion, goToEstado }) {
             {isApproved
               ? "Ir a estado"
               : mySolicitud?.estado === "Observado"
-              ? "Corregir ahora"
-              : "Comenzar inscripción ahora"}
+                ? "Corregir ahora"
+                : "Comenzar inscripción ahora"}
           </button>
         </div>
       </div>
@@ -1373,8 +1389,8 @@ function AlreadySubmittedCard({ solicitud, goToEstado }) {
           {isApproved
             ? "Ya tienes aprobado el TCU"
             : isRejected
-            ? "Tu anteproyecto fue rechazado"
-            : "Ya tienes un anteproyecto registrado"}
+              ? "Tu anteproyecto fue rechazado"
+              : "Ya tienes un anteproyecto registrado"}
         </h2>
       </div>
 
@@ -1394,8 +1410,8 @@ function AlreadySubmittedCard({ solicitud, goToEstado }) {
           {isApproved
             ? "Ya tienes aprobado el TCU. Ve a Estado para descargar tu comprobante y revisar el código de aprobación."
             : isRejected
-            ? "Tu anteproyecto fue rechazado. Puedes iniciar una nueva inscripción de TCU desde este panel."
-            : "Tu anteproyecto ya fue enviado y actualmente se encuentra en estado "}
+              ? "Tu anteproyecto fue rechazado. Puedes iniciar una nueva inscripción de TCU desde este panel."
+              : "Tu anteproyecto ya fue enviado y actualmente se encuentra en estado "}
           {!isApproved && !isRejected && (
             <>
               <span className="font-semibold">
@@ -1414,8 +1430,8 @@ function AlreadySubmittedCard({ solicitud, goToEstado }) {
           {isApproved
             ? "No puedes registrar otro anteproyecto porque el proceso ya quedó aprobado."
             : isRejected
-            ? "Revisa las observaciones anteriores en Estado si necesitas tomarlas como referencia."
-            : "Desde aquí no puedes crear otro anteproyecto mientras este proceso siga activo. Puedes revisar el seguimiento, historial y observaciones en la sección de estado."}
+              ? "Revisa las observaciones anteriores en Estado si necesitas tomarlas como referencia."
+              : "Desde aquí no puedes crear otro anteproyecto mientras este proceso siga activo. Puedes revisar el seguimiento, historial y observaciones en la sección de estado."}
         </p>
       </div>
 
@@ -2931,10 +2947,7 @@ function Step6_Resumen({ formData }) {
               label="Cargo supervisor"
               value={formData.institucion_supervisor_cargo}
             />
-            <Field
-              label="Correo"
-              value={formData.institucion_correo}
-            />
+            <Field label="Correo" value={formData.institucion_correo} />
             <Field
               label="Tipo de servicio"
               value={formData.institucion_tipo_servicio}
@@ -2955,20 +2968,16 @@ function Step6_Resumen({ formData }) {
               label="Descripción del problema"
               value={formData.justificacion}
             />
-            <Field label="Objetivo general" value={formData.objetivoGeneral} />
             <Field label="Beneficiarios" value={formData.beneficiarios} />
-            <Field
-              label="Estrategia de solución"
-              value={formData.estrategiaSolucion}
-            />
           </div>
         </div>
 
         <div className="bg-white border border-slate-200 rounded-xl p-4">
           <h4 className="text-base font-semibold text-slate-900 mb-3">
-            Objetivos específicos
+            Objetivos
           </h4>
-
+          <Field label="Objetivo general" value={formData.objetivoGeneral} />
+          <br />
           {objetivosItems.length ? (
             <div className="space-y-2">
               {objetivosItems.map((obj, i) => (
@@ -2992,9 +3001,13 @@ function Step6_Resumen({ formData }) {
 
         <div className="bg-white border border-slate-200 rounded-xl p-4">
           <h4 className="text-base font-semibold text-slate-900 mb-3">
-            Cronograma
+            Estrategia de solución y Cronograma
           </h4>
-
+          <Field
+            label="Estrategia de solución"
+            value={formData.estrategiaSolucion}
+          />
+          <br />
           {cronogramaItems.length ? (
             <div className="overflow-x-auto">
               <table className="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">

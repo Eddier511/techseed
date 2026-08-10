@@ -459,15 +459,7 @@ export default function StudentStatusPage({ solicitud }) {
     sectionTitle("5. Objetivo general");
     paragraph(value(objetivoGeneral, solicitud?.objetivoGeneral));
 
-    sectionTitle("6. Beneficiarios");
-    paragraph(value(formData.beneficiarios, solicitud?.beneficiario));
-
-    sectionTitle("7. Estrategia y pertinencia de solución");
-    paragraph(
-      value(formData.estrategiaSolucion, solicitud?.estrategiaSolucion),
-    );
-
-    sectionTitle("8. Objetivos específicos");
+    sectionTitle("6. Objetivos específicos");
     if (objetivosItems.length) {
       objetivosItems.forEach((item, index) => bullet(index + 1, item));
     } else {
@@ -475,6 +467,14 @@ export default function StudentStatusPage({ solicitud }) {
         value(formData.objetivosEspecificos, solicitud?.objetivosEspecificos),
       );
     }
+
+    sectionTitle("7. Beneficiarios");
+    paragraph(value(formData.beneficiarios, solicitud?.beneficiario));
+
+    sectionTitle("8. Estrategia y pertinencia de solución");
+    paragraph(
+      value(formData.estrategiaSolucion, solicitud?.estrategiaSolucion),
+    );
 
     sectionTitle("9. Cronograma");
     if (cronogramaItems.length) {
