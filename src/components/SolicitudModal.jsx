@@ -12,6 +12,11 @@ const TABS = [
   { id: "cronograma", label: "Cronograma" },
 ];
 
+const MAIN_TABS = [
+  { id: "anteproyecto", label: "Anteproyecto" },
+  { id: "trazabilidad", label: "Trazabilidad" },
+];
+
 function Field({ label, value }) {
   return (
     <div className="text-xs md:text-sm text-slate-700">
@@ -41,6 +46,7 @@ export default function SolicitudModal({
   const { fetchSolicitudDetalle } = useSolicitudes();
 
   const [observation, setObservation] = useState("");
+  const [activeMainTab, setActiveMainTab] = useState("anteproyecto");
   const [activeTab, setActiveTab] = useState("estudiante");
 
   const [detalle, setDetalle] = useState(null);
@@ -63,6 +69,7 @@ export default function SolicitudModal({
     if (!canRender) return;
 
     setObservation("");
+    setActiveMainTab("anteproyecto");
     setActiveTab("estudiante");
     setErrorDetalle("");
     setEditableFlags({
@@ -179,6 +186,28 @@ export default function SolicitudModal({
       .filter((r) => r.actividad || r.tarea || String(r.horas).trim() !== "");
   }, [s, legacyForm]);
 
+  const historyItems = useMemo(() => {
+    const arr =
+      (Array.isArray(s.history) && s.history) ||
+      (Array.isArray(s._rawDetalle?.history) && s._rawDetalle.history) ||
+      (Array.isArray(s._raw?.history) && s._raw.history) ||
+      [];
+
+    return [...arr]
+      .map((entry) => ({
+        id: entry.id || entry._id || "",
+        date: entry.date || entry.fecha || entry.created_at || "",
+        action: entry.action || entry.accion || "",
+        user: entry.user || entry.usuario || "",
+        message: entry.message || entry.mensaje || "",
+      }))
+      .sort((a, b) => {
+        const da = new Date(a.date || 0).getTime();
+        const db = new Date(b.date || 0).getTime();
+        return db - da;
+      });
+  }, [s]);
+
   if (!canRender) return null;
 
   const status = s.status || s.estado || "Enviado";
@@ -281,6 +310,19 @@ export default function SolicitudModal({
   const canEditObservation = canManage && isEditableStatus;
   const showActions = canManage && isEditableStatus;
 
+  const formatHistoryDate = (date) => {
+    if (!date) return "—";
+    const d = new Date(date);
+    if (Number.isNaN(d.getTime())) return String(date);
+    return d.toLocaleString("es-CR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-stretch justify-center bg-black/40 p-2 md:items-center md:p-4">
       <div className="relative flex w-full max-w-6xl max-h-[calc(100dvh-1rem)] md:max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-2xl md:rounded-3xl bg-white shadow-2xl border border-slate-200">
@@ -309,6 +351,28 @@ export default function SolicitudModal({
         </div>
 
         <div className="shrink-0 px-4 md:px-7 pt-4">
+          <div className="flex gap-2 overflow-x-auto pb-3">
+            {MAIN_TABS.map((t) => {
+              const active = activeMainTab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveMainTab(t.id)}
+                  className={[
+                    "px-5 py-2 rounded-xl text-xs md:text-sm font-bold border transition",
+                    active
+                      ? "bg-[rgba(2,14,159,1)] text-white border-[rgba(2,14,159,1)]"
+                      : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50",
+                    "shrink-0",
+                  ].join(" ")}
+                >
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {activeMainTab === "anteproyecto" && (
           <div className="flex gap-2 overflow-x-auto pb-1">
             {TABS.map((t) => {
               const active = activeTab === t.id;
@@ -329,6 +393,7 @@ export default function SolicitudModal({
               );
             })}
           </div>
+          )}
 
           {(loadingDetalle || errorDetalle) && (
             <div className="mt-3">
@@ -359,6 +424,8 @@ export default function SolicitudModal({
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 md:px-7 py-5 space-y-5">
+          {activeMainTab === "anteproyecto" && (
+            <>
           {activeTab === "estudiante" && (
             <section className="space-y-3">
               <h4 className="text-sm font-semibold text-slate-900">
@@ -638,6 +705,66 @@ export default function SolicitudModal({
               </p>
             )}
           </section>
+            </>
+          )}
+
+          {activeMainTab === "trazabilidad" && (
+            <section className="space-y-4">
+              <div>
+                <h4 className="text-sm font-semibold text-slate-900">
+                  Trazabilidad completa
+                </h4>
+                <p className="mt-1 text-xs text-slate-500">
+                  Bitácora administrativa con fecha, usuario, acción y respuesta registrada.
+                </p>
+              </div>
+
+              <div className="overflow-x-auto rounded-2xl border border-slate-200">
+                <table className="min-w-[860px] w-full text-xs md:text-sm">
+                  <thead className="bg-slate-50 border-b border-slate-200">
+                    <tr className="text-left text-slate-600">
+                      <th className="px-4 py-3 font-semibold">Fecha</th>
+                      <th className="px-4 py-3 font-semibold">Usuario</th>
+                      <th className="px-4 py-3 font-semibold">Acción</th>
+                      <th className="px-4 py-3 font-semibold">Respuesta / observación</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {historyItems.length ? (
+                      historyItems.map((entry, index) => (
+                        <tr
+                          key={entry.id || index}
+                          className="border-b border-slate-200 last:border-b-0 align-top hover:bg-slate-50"
+                        >
+                          <td className="px-4 py-3 whitespace-nowrap text-slate-700">
+                            {formatHistoryDate(entry.date)}
+                          </td>
+                          <td className="px-4 py-3 text-slate-700">
+                            {entry.user || "—"}
+                          </td>
+                          <td className="px-4 py-3 font-medium text-slate-900">
+                            {entry.action || "—"}
+                          </td>
+                          <td className="px-4 py-3 text-slate-700">
+                            {entry.message || "Sin observaciones"}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={4}
+                          className="px-4 py-8 text-center text-slate-500"
+                        >
+                          No hay movimientos registrados para esta solicitud.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
         </div>
 
         <div className="shrink-0 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-4 md:px-7 py-3 md:py-4 border-t border-slate-200 bg-slate-50">
