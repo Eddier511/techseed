@@ -61,7 +61,8 @@ export default function StudentStatusPage({ solicitud }) {
     objetivoGeneral,
   } = solicitud.formData || {};
 
-  const due = solicitud.due;
+  const displayDate =
+    solicitud?.created_at || solicitud?._raw?.created_at || solicitud?.due;
 
   const statusColor =
     status === "Aprobado"
@@ -543,10 +544,10 @@ export default function StudentStatusPage({ solicitud }) {
                   🏢 {institucion}
                 </span>
               )}
-              {due && (
+              {displayDate && (
                 <span className="px-2.5 py-1 rounded-full bg-slate-100">
-                  ⏰ Vencimiento:{" "}
-                  {new Date(due).toLocaleDateString("es-CR", {
+                  ⏰ Fecha:{" "}
+                  {new Date(displayDate).toLocaleDateString("es-CR", {
                     day: "2-digit",
                     month: "2-digit",
                     year: "numeric",
