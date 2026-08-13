@@ -71,6 +71,23 @@ export default function ReportsPage() {
     fetchReports();
   };
 
+  const handleClearFilters = async () => {
+    setSearch("");
+    setStatusFilter("all");
+    setFromDate("");
+    setToDate("");
+
+    try {
+      setLoading(true);
+      const res = await api.get("/solicitudes/reportes", { params: {} });
+      setReportData(res.data);
+    } catch (err) {
+      console.error("Error limpiando filtros de reportes:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleExportCSV = () => {
     const rows = (reportData.solicitudes || []).map((s) => ({
       ID: s.id,
@@ -259,6 +276,13 @@ export default function ReportsPage() {
                     className="px-4 py-2 rounded-xl bg-[#ffd600] hover:bg-yellow-300 text-slate-900 text-sm font-semibold"
                   >
                     Aplicar filtros
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleClearFilters}
+                    className="px-4 py-2 rounded-xl border border-slate-300 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50"
+                  >
+                    Limpiar filtros
                   </button>
                 </div>
 

@@ -396,6 +396,17 @@ export default function InstitutionsPage() {
                       </option>
                     ))}
                   </select>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearch("");
+                      setStatusFilter("all");
+                      setTypeFilter("all");
+                    }}
+                    className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50"
+                  >
+                    Limpiar filtros
+                  </button>
                 </div>
               </div>
 

@@ -266,6 +266,16 @@ export default function CoordinatorsPage() {
                     <option value="COORD">Coordinadores</option>
                     <option value="STUDENT">Estudiantes</option>
                   </select>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearch("");
+                      setRoleFilter("all");
+                    }}
+                    className="px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50"
+                  >
+                    Limpiar filtros
+                  </button>
                 </div>
               </div>
 

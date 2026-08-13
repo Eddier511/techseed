@@ -1975,7 +1975,18 @@ function Step2_Institucion({
               </option>
             ))}
           </select>
-
+          <button
+            type="button"
+            onClick={() => {
+              if (disabled) return;
+              setSearch("");
+              setTipoFilter("Todos");
+            }}
+            disabled={disabled}
+            className="px-4 py-2 text-xs rounded-md border border-slate-300 bg-white text-slate-700 font-semibold hover:bg-slate-50 disabled:opacity-50"
+          >
+            Limpiar filtros
+          </button>
           <div className="flex-1" />
 
           <button

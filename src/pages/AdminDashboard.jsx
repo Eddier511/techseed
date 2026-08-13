@@ -528,6 +528,21 @@ export default function AdminDashboard() {
                       className="border border-slate-300 rounded-lg px-2 py-1.5 text-sm"
                     />
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearch("");
+                      setPriorityFilter("all");
+                      setStatusFilter("all");
+                      setAssignedFilter("all");
+                      setFromDate("");
+                      setToDate("");
+                    }}
+                    className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50"
+                  >
+                    Limpiar filtros
+                  </button>
                 </div>
               </div>
 
