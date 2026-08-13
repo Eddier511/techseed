@@ -9,8 +9,8 @@ import {
 import api from "../api/apiClient";
 
 const AuthContext = createContext(null);
-const INACTIVITY_WARNING_MS = 10 * 1000;
-const WARNING_COUNTDOWN_SECONDS = 30;
+const INACTIVITY_WARNING_MS = 50 * 60 * 1000;
+const WARNING_COUNTDOWN_SECONDS = 10 * 60;
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
