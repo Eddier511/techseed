@@ -1061,11 +1061,13 @@ export default function StudentPortal() {
   }, []);
 
   const displayName =
-    user?.nombre ||
+    mySolicitud?.formData?.nombre ||
     mySolicitud?.estudiante_nombre ||
-    "Estudiante Universidad FidÃ©litas";
+    user?.nombre ||
+    "Estudiante Universidad Fidélitas";
 
-  const displayCareer = user?.carrera || mySolicitud?.carrera || "TechSeed";
+  const displayCareer =
+    mySolicitud?.formData?.carrera || mySolicitud?.carrera || user?.carrera || "TechSeed";
 
   const handleCompletedWizard = async () => {
     try {
@@ -3148,6 +3150,7 @@ function Step6_Resumen({ formData }) {
     </div>
   );
 }
+
 
 
 
