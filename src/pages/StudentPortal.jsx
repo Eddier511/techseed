@@ -310,17 +310,17 @@ function StudentWizard({ onCompleted, existingSolicitud = null }) {
         if (!u || ignore) return;
 
         setFormData((prev) => {
-          const base = isObservedMode
-            ? normalizeFormData(existingSolicitud?.formData)
+          const base = existingSolicitud?.formData
+            ? normalizeFormData(existingSolicitud.formData)
             : normalizeFormData(prev);
 
           return {
             ...base,
-            nombre: u.nombre || base.nombre || "",
-            cedula: u.cedula || base.cedula || "",
+            nombre: base.nombre || u.nombre || "",
+            cedula: base.cedula || u.cedula || "",
             carrera: base.carrera || u.carrera || "",
             sede: base.sede || u.sede || "",
-            estudiante_email: u.email || base.estudiante_email || "",
+            estudiante_email: base.estudiante_email || u.email || "",
             estudiante_phone: base.estudiante_phone || u.phone || "",
             oficio: base.oficio || u.oficio || "",
             estado_civil: base.estado_civil || u.estado_civil || "",
