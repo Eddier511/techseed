@@ -61,7 +61,6 @@ export default function StudentStatusPage({ solicitud }) {
     objetivoGeneral,
   } = solicitud.formData || {};
 
-  const assignedTo = solicitud.assigned_to;
   const due = solicitud.due;
 
   const statusColor =
@@ -473,7 +472,6 @@ export default function StudentStatusPage({ solicitud }) {
     field("Estado", "Aprobado por la coordinación de TCU");
     field("Código", approvalCode || "Pendiente");
     field("Fecha de emisión", today);
-    field("Revisor asignado", assignedTo || "No indicado");
 
     sectionTitle("4. Descripción y justificación");
     paragraph(value(formData.justificacion, solicitud?.justificacion));
@@ -543,11 +541,6 @@ export default function StudentStatusPage({ solicitud }) {
               {institucion && (
                 <span className="px-2.5 py-1 rounded-full bg-slate-100">
                   🏢 {institucion}
-                </span>
-              )}
-              {assignedTo && (
-                <span className="px-2.5 py-1 rounded-full bg-slate-100">
-                  🧑‍🏫 Revisor: {assignedTo}
                 </span>
               )}
               {due && (
@@ -724,9 +717,6 @@ export default function StudentStatusPage({ solicitud }) {
                     Acción
                   </th>
                   <th className="p-3 text-left font-semibold text-slate-600">
-                    Usuario
-                  </th>
-                  <th className="p-3 text-left font-semibold text-slate-600">
                     Observación
                   </th>
                 </tr>
@@ -738,7 +728,6 @@ export default function StudentStatusPage({ solicitud }) {
                     const fecha =
                       entry.date || entry.fecha || entry.created_at || null;
                     const accion = entry.action || entry.accion || "-";
-                    const usuario = entry.user || entry.usuario || "-";
                     const mensaje =
                       entry.message || entry.mensaje || "Sin observaciones";
 
@@ -760,9 +749,6 @@ export default function StudentStatusPage({ solicitud }) {
                           {accion}
                         </td>
                         <td className="p-3 text-slate-700 align-top">
-                          {usuario}
-                        </td>
-                        <td className="p-3 text-slate-700 align-top">
                           {mensaje}
                         </td>
                       </tr>
@@ -770,7 +756,7 @@ export default function StudentStatusPage({ solicitud }) {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={4} className="p-6 text-center text-slate-500">
+                    <td colSpan={3} className="p-6 text-center text-slate-500">
                       Aún no hay movimientos registrados en la bitácora para
                       esta solicitud.
                     </td>
@@ -784,4 +770,5 @@ export default function StudentStatusPage({ solicitud }) {
     </div>
   );
 }
+
 

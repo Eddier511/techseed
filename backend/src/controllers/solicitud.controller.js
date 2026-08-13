@@ -94,7 +94,7 @@ function validateCronogramaItems(items = []) {
   return {
     clean,
     totalHoras,
-    isValid: rowsAreValid && totalHoras === REQUIRED_TCU_HOURS,
+    isValid: rowsAreValid && totalHoras >= REQUIRED_TCU_HOURS,
   };
 }
 
@@ -288,7 +288,7 @@ async function createSolicitud(req, res) {
 
   if (!cronogramaValidation.isValid) {
     return res.status(400).json({
-      message: `El cronograma debe tener filas completas y sumar exactamente ${REQUIRED_TCU_HOURS} horas.`,
+      message: `El cronograma debe tener filas completas y sumar mínimo ${REQUIRED_TCU_HOURS} horas.`,
       total_horas: cronogramaValidation.totalHoras,
     });
   }
@@ -870,7 +870,7 @@ async function resubmitSolicitud(req, res) {
       if (!cronogramaValidation.isValid) {
         await conn.rollback();
         return res.status(400).json({
-          message: `El cronograma debe tener filas completas y sumar exactamente ${REQUIRED_TCU_HOURS} horas.`,
+          message: `El cronograma debe tener filas completas y sumar mínimo ${REQUIRED_TCU_HOURS} horas.`,
           total_horas: cronogramaValidation.totalHoras,
         });
       }
@@ -1111,3 +1111,5 @@ module.exports = {
   resubmitSolicitud,
   getSolicitudesReportes,
 };
+
+

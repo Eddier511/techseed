@@ -200,7 +200,7 @@ function StudentWizard({ onCompleted, existingSolicitud = null }) {
       );
     });
 
-    return rowsAreValid && getCronogramaTotalHours() === REQUIRED_TCU_HOURS;
+    return rowsAreValid && getCronogramaTotalHours() >= REQUIRED_TCU_HOURS;
   };
 
   const areFirstThreeObjetivosValid = () => {
@@ -288,9 +288,9 @@ function StudentWizard({ onCompleted, existingSolicitud = null }) {
     if (currentStep === 5 && !isCronogramaValid()) {
       const totalHoras = getCronogramaTotalHours();
       showMessage(
-        totalHoras === REQUIRED_TCU_HOURS
+        totalHoras >= REQUIRED_TCU_HOURS
           ? "Completa correctamente el cronograma. Cada fila debe tener actividad, tarea y horas entre 1 y 8."
-          : `El cronograma debe sumar exactamente ${REQUIRED_TCU_HOURS} horas. Actualmente suma ${totalHoras}.`,
+          : `El cronograma debe sumar m�nimo ${REQUIRED_TCU_HOURS} horas. Actualmente suma ${totalHoras}.`,
         "error",
       );
       return false;
@@ -820,9 +820,9 @@ function StudentWizard({ onCompleted, existingSolicitud = null }) {
       if (!isCronogramaValid()) {
         const totalHoras = getCronogramaTotalHours();
         showMessage(
-          totalHoras === REQUIRED_TCU_HOURS
+          totalHoras >= REQUIRED_TCU_HOURS
             ? "Completá correctamente el cronograma. Cada fila debe tener actividad, tarea y horas entre 1 y 8."
-            : `El cronograma debe sumar exactamente ${REQUIRED_TCU_HOURS} horas. Actualmente suma ${totalHoras}.`,
+            : `El cronograma debe sumar m�nimo ${REQUIRED_TCU_HOURS} horas. Actualmente suma ${totalHoras}.`,
           "error",
         );
         return;
@@ -2776,19 +2776,13 @@ function Step5_Cronograma({ formData, setFormData, disabled = false }) {
     const n = Number(row?.horas || 0);
     return Number.isFinite(n) ? acc + n : acc;
   }, 0);
-  const remainingHours = REQUIRED_TCU_HOURS - totalHoras;
+  const missingHours = Math.max(REQUIRED_TCU_HOURS - totalHoras, 0);
   const totalHoursState =
-    totalHoras === REQUIRED_TCU_HOURS
-      ? "complete"
-      : totalHoras > REQUIRED_TCU_HOURS
-        ? "over"
-        : "pending";
+    totalHoras >= REQUIRED_TCU_HOURS ? "complete" : "pending";
   const totalHoursClass =
     totalHoursState === "complete"
       ? "bg-emerald-100 text-emerald-700"
-      : totalHoursState === "over"
-        ? "bg-red-100 text-red-700"
-        : "bg-amber-100 text-amber-700";
+      : "bg-amber-100 text-amber-700";
 
   return (
     <div className={disabled ? "opacity-70" : ""}>
@@ -2822,7 +2816,7 @@ function Step5_Cronograma({ formData, setFormData, disabled = false }) {
                   Cada fila del cronograma debe completarse obligatoriamente con
                   los campos de actividad, tarea y horas. El campo de horas debe
                   ser un valor numérico válido entre 1 y 8. Para continuar, la
-                  suma total debe ser exactamente de 150 horas.
+                  suma total debe ser de al menos 150 horas.
                 </p>
               </div>
             )}
@@ -2836,7 +2830,7 @@ function Step5_Cronograma({ formData, setFormData, disabled = false }) {
 
       <p className="text-sm text-slate-600 mb-3">
         Agregá actividades, tareas y horas estimadas. El total debe sumar
-        exactamente {REQUIRED_TCU_HOURS} horas.
+        m�nimo {REQUIRED_TCU_HOURS} horas.
       </p>
 
       {!disabled && (
@@ -2844,16 +2838,12 @@ function Step5_Cronograma({ formData, setFormData, disabled = false }) {
           className={`mb-3 rounded-xl border px-3 py-2 text-xs font-medium ${
             totalHoursState === "complete"
               ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-              : totalHoursState === "over"
-                ? "border-red-200 bg-red-50 text-red-700"
-                : "border-amber-200 bg-amber-50 text-amber-800"
+              : "border-amber-200 bg-amber-50 text-amber-800"
           }`}
         >
           {totalHoursState === "complete"
-            ? "Cronograma completo: ya sumaste las 150 horas requeridas."
-            : totalHoursState === "over"
-              ? `Te pasaste por ${Math.abs(remainingHours)} horas. Ajustá el cronograma para sumar exactamente 150.`
-              : `Faltan ${remainingHours} horas para completar las 150 requeridas.`}
+            ? `Cronograma valido: sumaste ${totalHoras} horas.`
+            : `Faltan ${missingHours} horas para completar las 150 requeridas.`}
         </div>
       )}
 
@@ -2955,7 +2945,7 @@ function Step5_Cronograma({ formData, setFormData, disabled = false }) {
         <p className="text-xs text-slate-500">
           No se puede agregar una nueva fila si la anterior está vacía o tiene
           horas inválidas. Puedes agregar tantas filas como necesites hasta
-          sumar exactamente {REQUIRED_TCU_HOURS} horas.
+          sumar m�nimo {REQUIRED_TCU_HOURS} horas.
         </p>
 
         <button
@@ -3157,5 +3147,7 @@ function Step6_Resumen({ formData }) {
     </div>
   );
 }
+
+
 
 
