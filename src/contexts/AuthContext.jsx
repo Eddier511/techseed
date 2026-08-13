@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import api from "../api/apiClient";
 
 const AuthContext = createContext(null);
@@ -7,6 +7,14 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const refreshUser = useCallback(async () => {
+    const res = await api.get("/auth/me");
+    setUser(res.data.user);
+    localStorage.setItem("user", JSON.stringify(res.data.user));
+    localStorage.setItem("user_email", res.data.user?.email || "");
+    return res.data.user;
+  }, []);
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -14,27 +22,37 @@ export function AuthProvider({ children }) {
       return;
     }
 
-    api
-      .get("/auth/me")
-      .then((res) => {
-        setUser(res.data.user);
-        localStorage.setItem("user", JSON.stringify(res.data.user));
-        localStorage.setItem("user_email", res.data.user?.email || "");
-      })
+    refreshUser()
       .catch(() => {
         localStorage.removeItem("token");
         setUser(null);
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [refreshUser]);
 
-  const refreshUser = async () => {
-    const res = await api.get("/auth/me");
-    setUser(res.data.user);
-    localStorage.setItem("user", JSON.stringify(res.data.user));
-    localStorage.setItem("user_email", res.data.user?.email || "");
-    return res.data.user;
-  };
+  useEffect(() => {
+    const refreshIfAuthenticated = () => {
+      if (!localStorage.getItem("token")) return;
+      refreshUser().catch(() => {
+        localStorage.removeItem("token");
+        setUser(null);
+      });
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        refreshIfAuthenticated();
+      }
+    };
+
+    window.addEventListener("focus", refreshIfAuthenticated);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("focus", refreshIfAuthenticated);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [refreshUser]);
 
   const requestOtp = async (email) => {
     const res = await api.post("/auth/mock/request", { email });
