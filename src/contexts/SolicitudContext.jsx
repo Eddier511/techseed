@@ -45,6 +45,8 @@ function mapSolicitudFromApi(apiS) {
         : "Medium",
 
     prioridad: apiS.prioridad || "Medium",
+    created_at: apiS.created_at || null,
+    updated_at: apiS.updated_at || null,
     due: apiS.vencimiento || null,
     vencimiento: apiS.vencimiento || null,
     owner: apiS.owner_email || "",
@@ -65,6 +67,11 @@ function mapSolicitudFromApi(apiS) {
 
     institucion_id: apiS.institucion_id || null,
     institucion_nombre: apiS.institucion_nombre || "",
+    institucion_cedula: apiS.institucion_cedula || "",
+    institucion_supervisor: apiS.institucion_supervisor || "",
+    institucion_supervisor_cargo: apiS.institucion_supervisor_cargo || "",
+    institucion_correo: apiS.institucion_correo || "",
+    institucion_tipo_servicio: apiS.institucion_tipo_servicio || "",
 
     tituloProyecto,
     beneficiario,
@@ -102,6 +109,7 @@ function mapSolicitudFromApi(apiS) {
       institucion: apiS.institucion_nombre || "",
       institucion_cedula: apiS.institucion_cedula || "",
       institucion_supervisor: apiS.institucion_supervisor || "",
+      institucion_supervisor_cargo: apiS.institucion_supervisor_cargo || "",
       institucion_correo: apiS.institucion_correo || "",
       institucion_tipo_servicio: apiS.institucion_tipo_servicio || "",
 

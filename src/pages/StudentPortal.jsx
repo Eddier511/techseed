@@ -2307,21 +2307,32 @@ function Step3_ProyectoU({ formData, handleChange, disabled = false }) {
 
   const textAreaClass = (disabled) =>
     `w-full p-2 border rounded-md ${
-      disabled ? "bg-slate-100 text-slate-500 cursor-not-allowed" : ""
+      disabled ? "bg-slate-100 text-slate-600 cursor-not-allowed overflow-hidden" : ""
     }`;
 
-  const aiButton = (field, text, label = "Ayudarme con IA") => (
-    <div className="flex justify-end mt-2">
-      <button
-        type="button"
-        onClick={() => askAI(field, text)}
-        disabled={disabled || aiLoadingField === field}
-        className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold disabled:opacity-50"
-      >
-        {aiLoadingField === field ? "Analizando..." : `✨ ${label}`}
-      </button>
-    </div>
-  );
+  const textareaRows = (value, minRows = 3) => {
+    if (!disabled) return undefined;
+    const lineCount = String(value || "").split(/\r?\n/).length;
+    const lengthRows = Math.ceil(String(value || "").length / 140);
+    return Math.max(minRows, lineCount, lengthRows);
+  };
+
+  const aiButton = (field, text, label = "Ayudarme con IA") => {
+    if (disabled) return null;
+
+    return (
+      <div className="flex justify-end mt-2">
+        <button
+          type="button"
+          onClick={() => askAI(field, text)}
+          disabled={aiLoadingField === field}
+          className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold disabled:opacity-50"
+        >
+          {aiLoadingField === field ? "Analizando..." : `✨ ${label}`}
+        </button>
+      </div>
+    );
+  };
 
   return (
     <div className={disabled ? "opacity-70" : ""}>
@@ -2339,7 +2350,8 @@ function Step3_ProyectoU({ formData, handleChange, disabled = false }) {
             onChange={handleChange}
             disabled={disabled}
             placeholder="Título del proyecto"
-            className={`${textAreaClass(disabled)} h-16`}
+            rows={textareaRows(formData.tituloProyecto, 2)}
+            className={`${textAreaClass(disabled)} min-h-16`}
           />
           {aiButton(
             "tituloProyecto",
@@ -2356,7 +2368,8 @@ function Step3_ProyectoU({ formData, handleChange, disabled = false }) {
             onChange={handleChange}
             disabled={disabled}
             placeholder="Descripción del problema"
-            className={`${textAreaClass(disabled)} h-20`}
+            rows={textareaRows(formData.justificacion, 4)}
+            className={`${textAreaClass(disabled)} min-h-20`}
           />
           {aiButton(
             "justificacion",
@@ -2373,7 +2386,8 @@ function Step3_ProyectoU({ formData, handleChange, disabled = false }) {
             onChange={handleChange}
             disabled={disabled}
             placeholder="Objetivo general"
-            className={`${textAreaClass(disabled)} h-16`}
+            rows={textareaRows(formData.objetivoGeneral, 3)}
+            className={`${textAreaClass(disabled)} min-h-16`}
           />
           {aiButton(
             "objetivoGeneral",
@@ -2390,7 +2404,8 @@ function Step3_ProyectoU({ formData, handleChange, disabled = false }) {
             onChange={handleChange}
             disabled={disabled}
             placeholder="¿A quién se beneficiará el proyecto?"
-            className={`${textAreaClass(disabled)} h-16`}
+            rows={textareaRows(formData.beneficiarios, 3)}
+            className={`${textAreaClass(disabled)} min-h-16`}
           />
           {aiButton(
             "beneficiarios",
@@ -2407,7 +2422,8 @@ function Step3_ProyectoU({ formData, handleChange, disabled = false }) {
             onChange={handleChange}
             disabled={disabled}
             placeholder="Estrategia y pertinencia de solución (actividades principales)"
-            className={`${textAreaClass(disabled)} h-20`}
+            rows={textareaRows(formData.estrategiaSolucion, 4)}
+            className={`${textAreaClass(disabled)} min-h-20`}
           />
           {aiButton(
             "estrategiaSolucion",

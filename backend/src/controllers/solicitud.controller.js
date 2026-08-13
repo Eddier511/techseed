@@ -182,10 +182,17 @@ async function getMySolicitudes(req, res) {
     }
 
     const [rows] = await pool.query(
-      `SELECT *
-       FROM solicitudes
-       WHERE owner_email = ?
-       ORDER BY created_at DESC`,
+      `SELECT
+        s.*,
+        i.cedula_juridica AS institucion_cedula,
+        i.supervisor_nombre AS institucion_supervisor,
+        i.supervisor_cargo AS institucion_supervisor_cargo,
+        i.contacto_email AS institucion_correo,
+        i.tipo_servicio AS institucion_tipo_servicio
+       FROM solicitudes s
+       LEFT JOIN instituciones i ON i.id = s.institucion_id OR (s.institucion_id IS NULL AND i.nombre = s.institucion_nombre)
+       WHERE s.owner_email = ?
+       ORDER BY s.created_at DESC`,
       [ownerEmail],
     );
 
@@ -204,9 +211,16 @@ async function getAllSolicitudes(req, res) {
     await ensureApprovalCodeColumn();
 
     const [rows] = await pool.query(
-      `SELECT *
-       FROM solicitudes
-       ORDER BY created_at DESC`,
+      `SELECT
+        s.*,
+        i.cedula_juridica AS institucion_cedula,
+        i.supervisor_nombre AS institucion_supervisor,
+        i.supervisor_cargo AS institucion_supervisor_cargo,
+        i.contacto_email AS institucion_correo,
+        i.tipo_servicio AS institucion_tipo_servicio
+       FROM solicitudes s
+       LEFT JOIN instituciones i ON i.id = s.institucion_id OR (s.institucion_id IS NULL AND i.nombre = s.institucion_nombre)
+       ORDER BY s.created_at DESC`,
     );
 
     return res.json(rows);
@@ -480,7 +494,17 @@ async function getSolicitudDetalle(req, res) {
     const { id } = req.params;
 
     const [solRows] = await pool.query(
-      `SELECT * FROM solicitudes WHERE id = ? LIMIT 1`,
+      `SELECT
+        s.*,
+        i.cedula_juridica AS institucion_cedula,
+        i.supervisor_nombre AS institucion_supervisor,
+        i.supervisor_cargo AS institucion_supervisor_cargo,
+        i.contacto_email AS institucion_correo,
+        i.tipo_servicio AS institucion_tipo_servicio
+       FROM solicitudes s
+       LEFT JOIN instituciones i ON i.id = s.institucion_id OR (s.institucion_id IS NULL AND i.nombre = s.institucion_nombre)
+       WHERE s.id = ?
+       LIMIT 1`,
       [id],
     );
 

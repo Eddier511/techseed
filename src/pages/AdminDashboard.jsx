@@ -246,6 +246,28 @@ export default function AdminDashboard() {
     });
   };
 
+  const solicitudesOrdenadas = useMemo(
+    () =>
+      [...(solicitudes || [])].sort((a, b) => {
+        const dateA = new Date(a.created_at || a._raw?.created_at || 0).getTime();
+        const dateB = new Date(b.created_at || b._raw?.created_at || 0).getTime();
+        if (dateA !== dateB) return dateA - dateB;
+        return Number(a._raw?.id || a.id || 0) - Number(b._raw?.id || b.id || 0);
+      }),
+    [solicitudes],
+  );
+
+  const controlNumberById = useMemo(() => {
+    const map = new Map();
+    solicitudesOrdenadas.forEach((s, index) => {
+      map.set(String(s._raw?.id || s.id), index + 1);
+    });
+    return map;
+  }, [solicitudesOrdenadas]);
+
+  const getControlNumber = (ticket) =>
+    controlNumberById.get(String(ticket?._raw?.id || ticket?.id)) || "-";
+
   const getCoordinatorNameByEmail = (email) => {
     if (!email) return "Sin asignar";
     const found = coordinators.find(
@@ -267,10 +289,11 @@ export default function AdminDashboard() {
     return `${parts[0][0] || ""}${parts[1][0] || ""}`.toUpperCase();
   };
 
-  const filteredSolicitudes = solicitudes.filter((s) => {
+  const filteredSolicitudes = solicitudesOrdenadas.filter((s) => {
     const searchText = search.toLowerCase().trim();
 
     const idStr = String(s.id || "");
+    const controlStr = String(getControlNumber(s) || "");
     const reqStr = String(s.req || "");
     const subjStr = String(s.subj || "");
     const publicCodeStr = String(
@@ -289,6 +312,7 @@ export default function AdminDashboard() {
     const matchesSearch =
       !searchText ||
       idStr.toLowerCase().includes(searchText) ||
+      controlStr.toLowerCase().includes(searchText) ||
       reqStr.toLowerCase().includes(searchText) ||
       subjStr.toLowerCase().includes(searchText) ||
       publicCodeStr.toLowerCase().includes(searchText) ||
@@ -301,9 +325,9 @@ export default function AdminDashboard() {
 
     const matchesStatus = statusFilter === "all" || s.status === statusFilter;
 
-    const due = s.due;
-    const matchesFromDate = !fromDate || (due && due >= fromDate);
-    const matchesToDate = !toDate || (due && due <= toDate);
+    const createdDate = String(s.created_at || s._raw?.created_at || "").slice(0, 10);
+    const matchesFromDate = !fromDate || (createdDate && createdDate >= fromDate);
+    const matchesToDate = !toDate || (createdDate && createdDate <= toDate);
 
     const matchesAssigned =
       assignedFilter === "all" ||
@@ -448,7 +472,7 @@ export default function AdminDashboard() {
                 <div className="flex flex-wrap gap-3">
                   <input
                     type="text"
-                    placeholder="Buscar por ID, estudiante, asunto o código..."
+                    placeholder="Buscar por control, estudiante, asunto o código..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="border border-slate-300 rounded-lg px-3 py-1.5 text-sm w-full md:w-80"
@@ -489,7 +513,7 @@ export default function AdminDashboard() {
                   </select>
 
                   <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
-                    <span>Vencimiento:</span>
+                    <span>Fecha:</span>
                     <input
                       type="date"
                       value={fromDate}
@@ -511,13 +535,13 @@ export default function AdminDashboard() {
                 <table className="w-full min-w-[980px] text-sm">
                   <thead className="bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500">
                     <tr>
-                      <th className="p-3 text-left">ID</th>
+                      <th className="p-3 text-left">Control</th>
                       <th className="p-3 text-left">Estudiante</th>
                       <th className="p-3 text-left">Asunto</th>
                       <th className="p-3 text-left">Prioridad</th>
                       <th className="p-3 text-left">Estado</th>
                       <th className="p-3 text-left">Coordinador asignado</th>
-                      <th className="p-3 text-left">Vencimiento</th>
+                      <th className="p-3 text-left">Fecha</th>
                       <th className="p-3 text-left">Acción</th>
                     </tr>
                   </thead>
@@ -553,7 +577,7 @@ export default function AdminDashboard() {
                             className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
                           >
                             <td className="p-3 font-medium text-slate-800">
-                              {ticket.id}
+                              {getControlNumber(ticket)}
                             </td>
                             <td className="p-3 text-slate-700">
                               {ticket.formData?.nombre || ticket.req || "-"}
@@ -591,7 +615,7 @@ export default function AdminDashboard() {
                             </td>
 
                             <td className="p-3 text-slate-700">
-                              {formatDue(ticket.due)}
+                              {formatDue(ticket.created_at || ticket._raw?.created_at)}
                             </td>
 
                             <td className="p-3 text-slate-700">
