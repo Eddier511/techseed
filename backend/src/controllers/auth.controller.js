@@ -176,6 +176,39 @@ async function me(req, res) {
   }
 }
 
+async function refreshSession(req, res) {
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, nombre, email, role, cedula, carrera
+       FROM users
+       WHERE id = ?
+       LIMIT 1`,
+      [req.user.id],
+    );
+
+    const user = rows[0];
+    if (!user)
+      return res.status(404).json({ message: "Usuario no encontrado" });
+
+    const token = signToken(user);
+
+    return res.json({
+      user: {
+        id: user.id,
+        nombre: user.nombre,
+        email: user.email,
+        role: user.role,
+        cedula: user.cedula || "",
+        carrera: user.carrera || "",
+      },
+      token,
+    });
+  } catch (err) {
+    console.error("Error refreshSession:", err);
+    return res.status(500).json({ message: "Error en el servidor" });
+  }
+}
+
 async function register(req, res) {
   return res.status(501).json({ message: "register no implementado" });
 }
@@ -188,6 +221,7 @@ module.exports = {
   register,
   login,
   me,
+  refreshSession,
   requestMockOtp,
   verifyMockOtp,
 };
