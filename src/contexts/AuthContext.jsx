@@ -28,6 +28,14 @@ export function AuthProvider({ children }) {
       .finally(() => setLoading(false));
   }, []);
 
+  const refreshUser = async () => {
+    const res = await api.get("/auth/me");
+    setUser(res.data.user);
+    localStorage.setItem("user", JSON.stringify(res.data.user));
+    localStorage.setItem("user_email", res.data.user?.email || "");
+    return res.data.user;
+  };
+
   const requestOtp = async (email) => {
     const res = await api.post("/auth/mock/request", { email });
     return res.data;
@@ -51,7 +59,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, requestOtp, verifyOtp, logout }}
+      value={{ user, loading, refreshUser, requestOtp, verifyOtp, logout }}
     >
       {children}
     </AuthContext.Provider>

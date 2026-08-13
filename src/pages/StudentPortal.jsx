@@ -1032,7 +1032,7 @@ export default function StudentPortal() {
   const [activeTab, setActiveTab] = useState("overview");
   const [globalFlash, setGlobalFlash] = useState(null);
 
-  const { user, logout } = useAuth();
+  const { user, refreshUser, logout } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -1040,6 +1040,7 @@ export default function StudentPortal() {
 
     const loadData = async () => {
       try {
+        await refreshUser();
         const base = await fetchMySolicitud();
         if (!ignore && base?.id) {
           await fetchSolicitudDetalle(base.id);
@@ -3147,6 +3148,7 @@ function Step6_Resumen({ formData }) {
     </div>
   );
 }
+
 
 
 
