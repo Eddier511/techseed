@@ -28,7 +28,8 @@ Detrás de proxy, configurar confianza sólo para el proxy real antes de usar l�
 por IP; nunca confiar indiscriminadamente en X-Forwarded-For.
 Sin OPENAI_API_KEY la aplicación arranca y la IA responde 503.
 Aplicar TLS y supervisión/reinicio desde el hosting. No continuar tras excepciones
-no controladas. Build explícito: no se ejecutan scripts durante instalación.
+no controladas. La instalación ejecuta `postinstall` para compilar el frontend automáticamente.
+Si se instala con `--ignore-scripts`, ejecutar `npm run build` por separado.
 
 `npm test`, `npm run lint`, `npm run build` y `npm audit` verifican cambios.
 El JWT y su sesión expiran en ocho horas absolutas. El cierre revoca la sesión
