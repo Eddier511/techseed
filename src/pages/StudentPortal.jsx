@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { jsPDF } from "jspdf";
+
 import { toast } from "sonner";
 import {
   LuLayoutDashboard,
@@ -20,7 +20,7 @@ import { useSolicitudes } from "../contexts/SolicitudContext";
 import StudentStatusPage from "./StudentStatusPage";
 import api from "../api/apiClient";
 import { useAuth } from "../contexts/AuthContext.jsx";
-import { useNavigate } from "react-router-dom";
+
 
 /* ============================================================
    FORM DATA INICIAL
@@ -290,7 +290,7 @@ function StudentWizard({ onCompleted, existingSolicitud = null }) {
       showMessage(
         totalHoras >= REQUIRED_TCU_HOURS
           ? "Completa correctamente el cronograma. Cada fila debe tener actividad, tarea y horas entre 1 y 8."
-          : `El cronograma debe sumar m�nimo ${REQUIRED_TCU_HOURS} horas. Actualmente suma ${totalHoras}.`,
+          : `El cronograma debe sumar mínimo ${REQUIRED_TCU_HOURS} horas. Actualmente suma ${totalHoras}.`,
         "error",
       );
       return false;
@@ -372,6 +372,7 @@ function StudentWizard({ onCompleted, existingSolicitud = null }) {
   };
 
   const downloadResumenPDF = async (data) => {
+    const { jsPDF } = await import("jspdf");
     const doc = new jsPDF({ unit: "mm", format: "letter" });
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -822,7 +823,7 @@ function StudentWizard({ onCompleted, existingSolicitud = null }) {
         showMessage(
           totalHoras >= REQUIRED_TCU_HOURS
             ? "Completá correctamente el cronograma. Cada fila debe tener actividad, tarea y horas entre 1 y 8."
-            : `El cronograma debe sumar m�nimo ${REQUIRED_TCU_HOURS} horas. Actualmente suma ${totalHoras}.`,
+            : `El cronograma debe sumar mínimo ${REQUIRED_TCU_HOURS} horas. Actualmente suma ${totalHoras}.`,
           "error",
         );
         return;
@@ -1033,7 +1034,7 @@ export default function StudentPortal() {
   const [globalFlash, setGlobalFlash] = useState(null);
 
   const { user, refreshUser, logout } = useAuth();
-  const navigate = useNavigate();
+
 
   useEffect(() => {
     let ignore = false;
@@ -1064,7 +1065,7 @@ export default function StudentPortal() {
     mySolicitud?.formData?.nombre ||
     mySolicitud?.estudiante_nombre ||
     user?.nombre ||
-    "Estudiante Universidad Fid�litas";
+    "Estudiante Universidad Fidélitas";
 
   const displayCareer =
     mySolicitud?.formData?.carrera || mySolicitud?.carrera || user?.carrera || "TechSeed";
@@ -1140,9 +1141,9 @@ export default function StudentPortal() {
 
         <div className="p-4 border-t border-slate-200">
           <button
-            onClick={() => {
+            onClick={async () => {
               clearSolicitudState();
-              logout();
+              await logout();
               window.location.href = "/login";
             }}
             className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800"
@@ -1977,7 +1978,7 @@ function Step2_Institucion({
           </select>
           <button
             type="button"
-            onClick={() => {
+            onClick={async () => {
               if (disabled) return;
               setSearch("");
               setTipoFilter("Todos");
@@ -2226,7 +2227,7 @@ function Step3_ProyectoU({ formData, handleChange, disabled = false }) {
         step: 3,
         field,
         text,
-        formData,
+        formData: Object.fromEntries(["tituloProyecto", "justificacion", "objetivoGeneral", "beneficiarios", "estrategiaSolucion"].map(key => [key, formData[key]])),
       });
 
       const normalized = normalizeAiResult(res.data);
@@ -2483,7 +2484,7 @@ function Step4_ObjetivosEspecificos({
         step: 4,
         field: "objetivoEspecifico",
         text,
-        formData,
+        formData: Object.fromEntries(["tituloProyecto", "justificacion", "objetivoGeneral", "beneficiarios", "estrategiaSolucion"].map(key => [key, formData[key]])),
       });
 
       const normalized = normalizeAiResult(res.data);
@@ -2860,7 +2861,7 @@ function Step5_Cronograma({ formData, setFormData, disabled = false }) {
 
       <p className="text-sm text-slate-600 mb-3">
         Agregá actividades, tareas y horas estimadas. El total debe sumar
-        m�nimo {REQUIRED_TCU_HOURS} horas.
+        mínimo {REQUIRED_TCU_HOURS} horas.
       </p>
 
       {!disabled && (
@@ -2975,7 +2976,7 @@ function Step5_Cronograma({ formData, setFormData, disabled = false }) {
         <p className="text-xs text-slate-500">
           No se puede agregar una nueva fila si la anterior está vacía o tiene
           horas inválidas. Puedes agregar tantas filas como necesites hasta
-          sumar m�nimo {REQUIRED_TCU_HOURS} horas.
+          sumar mínimo {REQUIRED_TCU_HOURS} horas.
         </p>
 
         <button

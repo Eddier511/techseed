@@ -8,7 +8,9 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME,
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0,
+  queueLimit: 50,
+  connectTimeout: 10000,
+  ...(process.env.DB_SSL === "true" ? {ssl: {rejectUnauthorized: true}} : {}),
   timezone: "Z",
 });
 

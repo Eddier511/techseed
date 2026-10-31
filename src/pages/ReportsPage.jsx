@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   LuLayoutDashboard,
   LuBuilding,
@@ -44,7 +44,7 @@ export default function ReportsPage() {
   const displayName = user?.nombre || "Coordinación TCU";
   const displayEmail = user?.email || "coordinacion.tcu@ufide.ac.cr";
 
-  const fetchReports = async () => {
+  const fetchReports = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -61,11 +61,11 @@ export default function ReportsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, statusFilter, fromDate, toDate]);
 
   useEffect(() => {
     fetchReports();
-  }, []);
+  }, [fetchReports]);
 
   const handleFilter = () => {
     fetchReports();
@@ -146,8 +146,8 @@ export default function ReportsPage() {
 
         <div className="p-4 border-t border-slate-200">
           <button
-            onClick={() => {
-              logout();
+            onClick={async () => {
+              await logout();
               window.location.href = "/login";
             }}
             className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800"
@@ -595,7 +595,8 @@ function exportToCSV(rows, filename = "reporte.csv") {
       headers
         .map((header) => {
           const value = row[header] ?? "";
-          const escaped = String(value).replace(/"/g, '""');
+          const safe = /^[\s]*[=+@-]/.test(String(value)) ? "'" + value : String(value);
+          const escaped = safe.replace(/"/g, '""');
           return `"${escaped}"`;
         })
         .join(","),

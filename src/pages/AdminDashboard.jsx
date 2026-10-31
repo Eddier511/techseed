@@ -55,7 +55,7 @@ export default function AdminDashboard() {
     fetchAllSolicitudes().catch((err) =>
       console.error("Error cargando solicitudes:", err),
     );
-  }, []);
+  }, [fetchAllSolicitudes]);
 
   useEffect(() => {
     const loadCoordinators = async () => {
@@ -71,7 +71,7 @@ export default function AdminDashboard() {
     };
 
     loadCoordinators();
-  }, []);
+  }, [fetchAllSolicitudes]);
 
   const openModal = (solicitud) => {
     setSelectedSolicitud(solicitud);
@@ -400,8 +400,8 @@ export default function AdminDashboard() {
 
           <div className="p-4 border-t border-slate-200">
             <button
-              onClick={() => {
-                logout();
+              onClick={async () => {
+                await logout();
                 window.location.href = "/login";
               }}
               className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800"
@@ -531,7 +531,7 @@ export default function AdminDashboard() {
 
                   <button
                     type="button"
-                    onClick={() => {
+                    onClick={async () => {
                       setSearch("");
                       setPriorityFilter("all");
                       setStatusFilter("all");

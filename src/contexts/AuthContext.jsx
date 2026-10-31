@@ -86,7 +86,9 @@ export function AuthProvider({ children }) {
     };
   }, [refreshUser]);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    try { if (localStorage.getItem('token')) await api.post('/auth/logout'); }
+    catch { /* La limpieza local sigue siendo necesaria si no hay conexión. */ }
     clearSessionTimers();
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -110,7 +112,7 @@ export function AuthProvider({ children }) {
       countdownIntervalRef.current = window.setInterval(() => {
         setWarningCountdown((current) => {
           if (current <= 1) {
-            logout();
+            void logout();
             return 0;
           }
 

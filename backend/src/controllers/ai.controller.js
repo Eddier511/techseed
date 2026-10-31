@@ -1,8 +1,6 @@
 const OpenAI = require("openai");
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+let client;
 
 const ALLOWED_FIELDS_BY_STEP = {
   3: new Set([
@@ -299,7 +297,12 @@ function normalizeAiPayload(raw, step, field, originalText) {
 
 async function redactarAyuda(req, res) {
   try {
-    const { step, field, text, formData } = req.body;
+    if (!process.env.OPENAI_API_KEY) return res.status(503).json({message: 'IA no configurada'});
+    client ||= new OpenAI({apiKey: process.env.OPENAI_API_KEY, timeout: 30000, maxRetries: 1});
+    const { step, field, text, formData = {} } = req.body;
+    for (const key of ['tituloProyecto','justificacion','objetivoGeneral','beneficiarios','estrategiaSolucion']) {
+      if (formData[key] != null && (typeof formData[key] !== 'string' || formData[key].length > 3000)) return res.status(400).json({message: 'Contexto inválido'});
+    }
 
     const validation = validateAiRequest(step, field, text);
 
@@ -319,6 +322,7 @@ async function redactarAyuda(req, res) {
     const response = await client.responses.create({
       model: process.env.OPENAI_MODEL || "gpt-4o-mini",
       input: prompt,
+      max_output_tokens: 1500,
       tools: [],
     });
 
@@ -347,7 +351,7 @@ async function redactarAyuda(req, res) {
     console.error("Error en IA:", err);
     return res.status(500).json({
       message: "Error consultando OpenAI",
-      error: err.message,
+
     });
   }
 }

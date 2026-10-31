@@ -11,10 +11,10 @@ const {
 const { authRequired, coordOnly } = require("../middleware/auth.middleware");
 
 // GET público
-router.get("/", getAllInstituciones);
+router.get("/", authRequired, getAllInstituciones);
 
 // Estudiante solicita
-router.post("/solicitar", createInstitucionPublic);
+router.post("/solicitar", authRequired, createInstitucionPublic);
 
 // Solo COORD
 router.post("/", authRequired, coordOnly, createInstitucion);

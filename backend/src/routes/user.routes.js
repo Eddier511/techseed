@@ -5,7 +5,7 @@ const pool = require("../config/db");
 const { authRequired, coordOnly } = require("../middleware/auth.middleware");
 
 // Obtener usuario por email
-router.get("/", async (req, res) => {
+router.get("/", authRequired, coordOnly, async (req, res) => {
   const email = req.query.email;
   if (!email) return res.status(400).json({ message: "email requerido" });
 
@@ -148,7 +148,7 @@ router.patch("/:id/role", authRequired, coordOnly, async (req, res) => {
 });
 
 // Listar usuarios
-router.get("/list/all", authRequired, async (req, res) => {
+router.get("/list/all", authRequired, coordOnly, async (req, res) => {
   try {
     const [rows] = await pool.query(
       `SELECT id, nombre, email, cedula, carrera, role, sede, is_active, created_at

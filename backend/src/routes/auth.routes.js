@@ -5,6 +5,7 @@ const {
   login,
   me,
   refreshSession,
+  logout,
   requestMockOtp,
   verifyMockOtp,
 } = require("../controllers/auth.controller");
@@ -22,5 +23,6 @@ router.post("/mock/verify", verifyMockOtp);
 // ✅ Perfil autenticado (token)
 router.get("/me", authRequired, me);
 router.post("/refresh", authRequired, refreshSession);
+router.post("/logout", authRequired, logout);
 
 module.exports = router;

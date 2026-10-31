@@ -24,7 +24,7 @@ async function getUserByEmail(req, res) {
     console.error("Error getUserByEmail:", err);
     return res
       .status(500)
-      .json({ message: "Error en el servidor", error: err.message });
+      .json({ message: "Error en el servidor" });
   }
 }
 

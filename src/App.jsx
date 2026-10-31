@@ -1,12 +1,13 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-import AdminDashboard from "./pages/AdminDashboard.jsx";
-import StudentPortal from "./pages/StudentPortal.jsx";
-import InstitutionsPage from "./pages/InstitutionsPage.jsx";
-import ReportsPage from "./pages/ReportsPage.jsx";
-import CoordinatorsPage from "./pages/CoordinatorsPage.jsx";
-import SettingsPage from "./pages/SettingsPage.jsx";
-import LoginPage from "./pages/LoginPage.jsx";
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard.jsx"));
+const StudentPortal = lazy(() => import("./pages/StudentPortal.jsx"));
+const InstitutionsPage = lazy(() => import("./pages/InstitutionsPage.jsx"));
+const ReportsPage = lazy(() => import("./pages/ReportsPage.jsx"));
+const CoordinatorsPage = lazy(() => import("./pages/CoordinatorsPage.jsx"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage.jsx"));
+const LoginPage = lazy(() => import("./pages/LoginPage.jsx"));
 
 import { Toaster } from "sonner";
 import { SolicitudProvider } from "./contexts/SolicitudContext.jsx";
@@ -46,14 +47,15 @@ export default function App() {
       <BrowserRouter>
         <Toaster richColors position="top-right" />
 
+        <Suspense fallback={<div role="status">Cargando…</div>}>
         <Routes>
-          {/* ✅ sin Home: raíz decide por sesión/rol */}
+          {/* âœ… sin Home: raÃ­z decide por sesiÃ³n/rol */}
           <Route path="/" element={<Gate />} />
 
-          {/* ✅ login OTP */}
+          {/* âœ… login OTP */}
           <Route path="/login" element={<LoginPage />} />
 
-          {/* ✅ rutas protegidas */}
+          {/* âœ… rutas protegidas */}
           <Route
             path="/admin"
             element={
@@ -111,6 +113,7 @@ export default function App() {
           {/* fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </Suspense>
       </BrowserRouter>
     </SolicitudProvider>
   );

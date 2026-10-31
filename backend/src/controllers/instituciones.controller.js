@@ -3,39 +3,9 @@ const pool = require("../config/db");
 const ENABLED_STATUS = "Habilitada";
 const DISABLED_STATUS = "Deshabilitada";
 const VALID_INSTITUTION_STATUSES = [ENABLED_STATUS, DISABLED_STATUS];
-let statusColumnReady = false;
-
 function normalizeInstitutionStatus(status) {
-  if (status === ENABLED_STATUS || status === "Aprobada") return ENABLED_STATUS;
-  return DISABLED_STATUS;
+  return status === ENABLED_STATUS || status === 'Aprobada' ? ENABLED_STATUS : DISABLED_STATUS;
 }
-
-async function ensureInstitutionStatusColumn() {
-  if (statusColumnReady) return;
-
-  await pool.query(
-    `ALTER TABLE instituciones
-     MODIFY estado VARCHAR(20) NOT NULL DEFAULT 'Deshabilitada'`,
-  );
-
-  statusColumnReady = true;
-}
-
-async function normalizeLegacyInstitutionStatuses() {
-  await ensureInstitutionStatusColumn();
-
-  await pool.query(
-    `UPDATE instituciones
-     SET estado = CASE
-       WHEN estado = 'Aprobada' THEN ?
-       WHEN estado IN ('Pendiente', 'Rechazada', '') OR estado IS NULL THEN ?
-       ELSE estado
-     END
-     WHERE estado IN ('Aprobada', 'Pendiente', 'Rechazada', '') OR estado IS NULL`,
-    [ENABLED_STATUS, DISABLED_STATUS],
-  );
-}
-
 /**
  * GET /instituciones
  * - Si viene ?estado=Habilitada -> filtra
@@ -45,7 +15,7 @@ async function getAllInstituciones(req, res) {
   try {
     const { estado } = req.query;
 
-    await normalizeLegacyInstitutionStatuses();
+
 
     let query = `SELECT * FROM instituciones`;
     let params = [];
@@ -77,7 +47,7 @@ async function createInstitucionPublic(req, res) {
     supervisor_cargo,
     contacto_email,
     tipo_servicio,
-    created_by_user_id,
+
   } = req.body;
 
   if (!nombre || !cedula_juridica || !supervisor_nombre || !contacto_email) {
@@ -88,7 +58,7 @@ async function createInstitucionPublic(req, res) {
   }
 
   try {
-    await normalizeLegacyInstitutionStatuses();
+
 
     const [result] = await pool.query(
       `INSERT INTO instituciones (
@@ -112,7 +82,7 @@ async function createInstitucionPublic(req, res) {
         contacto_email,
         tipo_servicio || null,
         DISABLED_STATUS,
-        created_by_user_id || null,
+        req.user.id,
       ],
     );
 
@@ -152,7 +122,7 @@ async function createInstitucion(req, res) {
   }
 
   try {
-    await normalizeLegacyInstitutionStatuses();
+
 
     const [result] = await pool.query(
       `INSERT INTO instituciones (
@@ -214,7 +184,7 @@ async function updateInstitucion(req, res) {
   }
 
   try {
-    await normalizeLegacyInstitutionStatuses();
+
 
     await pool.query(
       `UPDATE instituciones
@@ -272,7 +242,7 @@ async function updateInstitucionStatus(req, res) {
   }
 
   try {
-    await normalizeLegacyInstitutionStatuses();
+
 
     await pool.query(
       `UPDATE instituciones

@@ -1,8 +1,9 @@
-const bcrypt = require("bcryptjs");
+const { randomUUID, randomInt } = require("crypto");
+const { secret, jwtOptions } = require("../config/security");
 const jwt = require("jsonwebtoken");
 const pool = require("../config/db");
 
-function signToken(user) {
+async function signToken(user) {
   const payload = {
     id: user.id,
     email: user.email,
@@ -10,7 +11,12 @@ function signToken(user) {
     nombre: user.nombre,
   };
 
-  return jwt.sign(payload, process.env.JWT_SECRET || "changeme", {
+  await pool.query('DELETE FROM auth_sessions WHERE expires_at <= UTC_TIMESTAMP()');
+  const sessionId = randomUUID();
+  await pool.query('INSERT INTO auth_sessions (id, user_id, last_seen, expires_at) VALUES (?, ?, UTC_TIMESTAMP(), DATE_ADD(UTC_TIMESTAMP(), INTERVAL 8 HOUR))', [sessionId, user.id]);
+  return jwt.sign(payload, secret, {
+    jwtid: sessionId,
+    ...jwtOptions,
     expiresIn: "8h",
   });
 }
@@ -24,7 +30,7 @@ function normalizeEmail(email) {
 }
 
 function generateOtp() {
-  return String(Math.floor(100000 + Math.random() * 900000));
+  return String(randomInt(100000, 1000000));
 }
 
 function generateMockOid(email) {
@@ -33,11 +39,12 @@ function generateMockOid(email) {
 
 async function requestMockOtp(req, res) {
   try {
-    console.log("BODY requestMockOtp:", req.body);
+    for (const [key, record] of otpStore) if (record.expiresAt < Date.now()) otpStore.delete(key);
+    if (otpStore.size >= 10000) return res.status(429).json({message: "Intenta mÃ¡s tarde"});
 
     const email = normalizeEmail(req.body?.email);
 
-    if (!email) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
       return res.status(400).json({ message: "email es requerido" });
     }
 
@@ -45,10 +52,10 @@ async function requestMockOtp(req, res) {
     const expiresAt = Date.now() + 5 * 60 * 1000;
     otpStore.set(email, { code, expiresAt, attempts: 0 });
 
-    console.log(`[MOCK-OTP] Código para ${email}: ${code} (expira 5 min)`);
+    console.log(`[MOCK-OTP] CÃ³digo para ${email}: ${code} (expira 5 min)`);
 
     return res.json({
-      message: "Código generado para pruebas",
+      message: "CÃ³digo generado para pruebas",
       expiresInSeconds: 300,
       code,
     });
@@ -56,7 +63,7 @@ async function requestMockOtp(req, res) {
     console.error("Error requestMockOtp:", err);
     return res.status(500).json({
       message: "Error en el servidor",
-      error: err.message,
+
     });
   }
 }
@@ -75,12 +82,12 @@ async function verifyMockOtp(req, res) {
     if (!record) {
       return res
         .status(401)
-        .json({ message: "Código inválido o no solicitado" });
+        .json({ message: "CÃ³digo invÃ¡lido o no solicitado" });
     }
 
     if (Date.now() > record.expiresAt) {
       otpStore.delete(email);
-      return res.status(401).json({ message: "Código expirado" });
+      return res.status(401).json({ message: "CÃ³digo expirado" });
     }
 
     record.attempts += 1;
@@ -88,18 +95,18 @@ async function verifyMockOtp(req, res) {
       otpStore.delete(email);
       return res
         .status(429)
-        .json({ message: "Demasiados intentos. Solicita otro código." });
+        .json({ message: "Demasiados intentos. Solicita otro cÃ³digo." });
     }
 
     if (code !== record.code) {
       otpStore.set(email, record);
-      return res.status(401).json({ message: "Código incorrecto" });
+      return res.status(401).json({ message: "CÃ³digo incorrecto" });
     }
 
     otpStore.delete(email);
 
     const [rows] = await pool.query(
-      "SELECT id, nombre, email, role, cedula, carrera FROM users WHERE email = ? LIMIT 1",
+      "SELECT id, nombre, email, role, cedula, carrera, is_active FROM users WHERE email = ? LIMIT 1",
       [email],
     );
     let user = rows[0];
@@ -116,7 +123,7 @@ async function verifyMockOtp(req, res) {
       );
 
       const [created] = await pool.query(
-        "SELECT id, nombre, email, role, cedula, carrera FROM users WHERE email = ? LIMIT 1",
+        "SELECT id, nombre, email, role, cedula, carrera, is_active FROM users WHERE email = ? LIMIT 1",
         [email],
       );
       user = created[0];
@@ -133,7 +140,8 @@ async function verifyMockOtp(req, res) {
       }
     }
 
-    const token = signToken(user);
+    if (Number(user.is_active) !== 1) return res.status(403).json({ message: "Usuario inactivo" });
+    const token = await signToken(user);
 
     return res.json({
       user: {
@@ -150,7 +158,7 @@ async function verifyMockOtp(req, res) {
     console.error("Error verifyMockOtp:", err);
     return res.status(500).json({
       message: "Error en el servidor",
-      error: err.message,
+
     });
   }
 }
@@ -176,10 +184,14 @@ async function me(req, res) {
   }
 }
 
+async function logout(req, res) {
+  await pool.query('DELETE FROM auth_sessions WHERE id = ? AND user_id = ?', [req.sessionId, req.user.id]);
+  return res.json({message: 'SesiÃ³n cerrada'});
+}
 async function refreshSession(req, res) {
   try {
     const [rows] = await pool.query(
-      `SELECT id, nombre, email, role, cedula, carrera
+      `SELECT id, nombre, email, role, cedula, carrera, is_active
        FROM users
        WHERE id = ?
        LIMIT 1`,
@@ -190,7 +202,8 @@ async function refreshSession(req, res) {
     if (!user)
       return res.status(404).json({ message: "Usuario no encontrado" });
 
-    const token = signToken(user);
+    if (Number(user.is_active) !== 1) return res.status(403).json({ message: "Usuario inactivo" });
+    const token = req.headers.authorization.slice(7);
 
     return res.json({
       user: {
@@ -222,6 +235,7 @@ module.exports = {
   login,
   me,
   refreshSession,
+  logout,
   requestMockOtp,
   verifyMockOtp,
 };

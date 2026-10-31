@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { jsPDF } from "jspdf";
+
 import {
   LuCheck,
   LuClipboardList,
@@ -121,6 +121,7 @@ export default function StudentStatusPage({ solicitud }) {
   }, [solicitud?.institucion_id, solicitud?.formData?.institucion_id]);
 
   const downloadApprovedDocument = async () => {
+    const { jsPDF } = await import("jspdf");
     const doc = new jsPDF({ unit: "mm", format: "letter" });
     const marginX = 18;
     const pageWidth = doc.internal.pageSize.getWidth();

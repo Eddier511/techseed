@@ -143,8 +143,8 @@ export default function SolicitudModal({
     loadInstitucion();
   }, [canRender, detalle, solicitudData]);
 
-  const s = detalle || solicitudData || {};
-  const legacyForm = s.formData || {};
+  const s = useMemo(() => detalle || solicitudData || {}, [detalle, solicitudData]);
+  const legacyForm = useMemo(() => s.formData || {}, [s]);
 
   const objetivosItems = useMemo(() => {
     const arr =
